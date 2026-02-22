@@ -53,9 +53,8 @@ const Header: React.FC<HeaderProps> = ({ isGatewayConnected, onMenuClick, update
                         <Button
                             icon={faInfoCircle}
                             themed={true}
-                            className="text-green-200"
                         >
-                            <Text className="text-green-200" bold={true}>UPDATE AVAILABLE</Text>
+                            <Text className="text-white dark:text-neutral-600" bold={true}>UPDATE AVAILABLE</Text>
                         </Button>
                     </button>
                 </div>
