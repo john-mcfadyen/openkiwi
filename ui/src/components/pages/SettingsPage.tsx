@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import Page from './Page'
 import { faHistory, faMicrochip, faWrench } from '@fortawesome/free-solid-svg-icons'
@@ -100,6 +101,7 @@ interface SettingsPageProps {
     tools: ToolDefinition[];
     whatsappStatus: { connected: boolean, qrCode: string | null };
     onLogoutWhatsApp: () => Promise<void>;
+    gatewayAddr: string;
 }
 
 export default function SettingsPage({
@@ -123,8 +125,19 @@ export default function SettingsPage({
     setViewingFile,
     tools,
     whatsappStatus,
-    onLogoutWhatsApp
+    onLogoutWhatsApp,
+    gatewayAddr
 }: SettingsPageProps) {
+    const [publicConfig, setPublicConfig] = useState<any>(null);
+
+    useEffect(() => {
+        if (activeSettingsSection === 'config') {
+            fetch(`${gatewayAddr.replace(/\/$/, '')}/api/config/public`)
+                .then(res => res.json())
+                .then(data => setPublicConfig(data))
+                .catch(err => console.error('Failed to fetch public config:', err));
+        }
+    }, [activeSettingsSection, gatewayAddr]);
 
     return (
         <Page
@@ -243,7 +256,7 @@ export default function SettingsPage({
 
                                 <div className="space-y-6">
 
-                                    <div className="bg-bg-primary rounded-xl p-4 group transition-all space-y-4">
+                                    <div className="bg-white dark:bg-bg-primary rounded-xl p-4 group transition-all space-y-4">
                                         <div className="flex justify-between items-center">
                                             <div className="space-y-1">
                                                 <Text bold={true} className="flex items-center gap-2">
@@ -339,7 +352,7 @@ export default function SettingsPage({
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 text-left">
                                     {tools.map(tool => (
-                                        <div key={tool.name} className="p-6 bg-bg-primary rounded-2xl space-y-3 group hover:border-accent-primary/50 transition-all">
+                                        <div key={tool.name} className="p-6 bg-white dark:bg-bg-primary rounded-2xl space-y-3 group hover:border-accent-primary/50 transition-all">
                                             <div className="flex justify-between items-start">
                                                 <Text bold={true} size="lg">{tool.name}</Text>
                                                 <Badge>Plugin</Badge>
@@ -367,7 +380,7 @@ export default function SettingsPage({
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                             <Card className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
+                                    <div className="bg-white dark:bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
                                         <div className="space-y-1">
                                             <Text bold={true} className="flex items-center gap-2">
                                                 <FontAwesomeIcon icon={faBrain} />
@@ -381,7 +394,7 @@ export default function SettingsPage({
                                         />
                                     </div>
 
-                                    <div className="bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
+                                    <div className="bg-white dark:bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
                                         <div className="space-y-1">
                                             <Text bold={true} className="flex items-center gap-2">
                                                 <FontAwesomeIcon icon={faHistory} />
@@ -395,7 +408,7 @@ export default function SettingsPage({
                                         />
                                     </div>
 
-                                    <div className="bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
+                                    <div className="bg-white dark:bg-bg-primary rounded-xl p-4 flex justify-between items-center group transition-all">
                                         <div className="space-y-1">
                                             <Text bold={true} className="flex items-center gap-2">
                                                 <FontAwesomeIcon icon={faFileText} />
@@ -436,9 +449,9 @@ export default function SettingsPage({
                                     <Text>
                                         Raw configuration file contents. Changes made through the UI are saved to this file.
                                     </Text>
-                                    <pre className="bg-bg-primary border border-border-color rounded-xl p-6 overflow-x-auto text-sm font-mono leading-relaxed">
+                                    <pre className="bg-white dark:bg-bg-primary border border-border-color rounded-xl p-6 overflow-x-auto text-sm font-mono leading-relaxed">
                                         <Text size="sm">
-                                            <code>{JSON.stringify(config, null, 2)}</code>
+                                            <code>{JSON.stringify(publicConfig || config, null, 2)}</code>
                                         </Text>
                                     </pre>
                                 </div>

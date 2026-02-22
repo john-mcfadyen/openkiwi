@@ -303,6 +303,9 @@ function App() {
 
   // Only fetch when manually requested or on initial load
   useEffect(() => {
+    // Fetch public config immediately to get system version/etc
+    fetchPublicConfig();
+
     // Only try to connect if we have saved credentials
     const savedAddr = localStorage.getItem('gateway_addr');
     const savedToken = localStorage.getItem('gateway_token');
@@ -461,6 +464,30 @@ function App() {
     const date = new Date(unixTimestamp * (unixTimestamp > 1e11 ? 1 : 1000));
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   };
+
+  async function fetchPublicConfig(addr?: string) {
+    try {
+      const response = await fetch(getApiUrl('/api/config/public', addr));
+      if (response.ok) {
+        const data = await response.json();
+        // Only set if we don't have a full config or if we want to update public parts
+        setConfig(prev => {
+          if (!prev) return data;
+          return {
+            ...prev,
+            system: data.system,
+            gateway: {
+              ...prev.gateway,
+              port: data.gateway.port,
+              endpoint: data.gateway.endpoint
+            }
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch public config:', error);
+    }
+  }
 
   async function fetchConnectedClients(addr?: string, token?: string) {
     try {
@@ -999,6 +1026,7 @@ function App() {
               tools={tools}
               whatsappStatus={whatsappStatus}
               onLogoutWhatsApp={onLogoutWhatsApp}
+              gatewayAddr={gatewayAddr}
             />
           )}
         </main>

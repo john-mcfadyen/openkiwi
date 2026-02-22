@@ -87,8 +87,8 @@ app.use(express.json());
 
 // Auth Middleware
 app.use((req, res, next) => {
-    // Allow initial config check to see if token is needed/exists
-    if (req.path === '/api/config' && req.method === 'GET') {
+    // Allow public config check (redacted)
+    if (req.path === '/api/config/public' && req.method === 'GET') {
         return next();
     }
 
@@ -123,6 +123,28 @@ if (!fs.existsSync(WORKSPACE_DIR)) {
 }
 app.use('/screenshots', express.static(SCREENSHOTS_DIR));
 app.use('/workspace-files', express.static(WORKSPACE_DIR));
+
+app.get('/api/config/public', (req, res) => {
+    const fullConfig = loadConfig();
+    const redactedConfig = {
+        chat: fullConfig.chat,
+        global: fullConfig.global,
+        system: fullConfig.system,
+        gateway: {
+            port: fullConfig.gateway.port,
+            endpoint: fullConfig.gateway.endpoint
+            // secretToken is explicitly omitted
+        },
+        providers: fullConfig.providers.map(p => {
+            const { apiKey, ...rest } = p;
+            return {
+                ...rest,
+                hasApiKey: !!apiKey
+            };
+        })
+    };
+    res.json(redactedConfig);
+});
 
 app.get('/api/config', (req, res) => {
     res.json(loadConfig());
