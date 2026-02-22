@@ -1,29 +1,32 @@
 #### [Jump to Quickstart](#quickstart)
 
+## What is it?
 OpenKIWI sits in the same automation space as other tools like Openclaw, but differentiates itself with a security-first design and a streamlined onboarding experience that gets you started in minutes.
 
 How is OpenKIWI different?
 
-### 🔒 Security by default
+#### Security by default
 * Everything runs in isolated Docker containers
 * Agents can only access what you explicitly grant
 
-### 🧠 Multi-model, agent-first
+#### Multi-model, agent-first
 * Switch between providers or run local models without rebuilding your workflow logic.
 
-### ✅ No session hijacking or OAuth shenanigans
+#### No session hijacking or OAuth shenanigans
 * OpenKIWI plays by the rules and aims to be enterprise-ready, with a clear and auditable security posture.
 
-### ⚡️ Onboarding in minutes, not hours.
+#### Onboarding in minutes, not hours.
 * Clone the repo, run one command and you're up in about 30 seconds. A few quick settings in the UI and you're running your first agent. The whole process takes about 3 minutes.
 * No 20-minute YouTube tutorial required.
 
 
 <a id="quickstart"></a>
-# 🚀 Quickstart
+## Quickstart
 
 ### 1. Launch the Services
 * Clone this repo
+* `cd` to the directory where you cloned the repo
+    * You should see a `docker-compose.yml` file in this directory
 * Run `docker compose up --build`
 
 ### 2. Connect to the gateway
