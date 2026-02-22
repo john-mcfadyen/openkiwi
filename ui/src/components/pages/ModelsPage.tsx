@@ -11,11 +11,13 @@ import Text from '../Text'
 import Select from '../Select'
 import Page from './Page'
 import ModelsTable from '../ModelsTable'
+import Input from '../Input'
 import { Model } from '../../types'
 import GoogleIcon from '../../img/google.png'
 import OpenAIIcon from '../../img/openai.svg.png'
 import AnthropicIcon from '../../img/anthropic.png'
 import LMStudioIcon from '../../img/lmstudio.png'
+import OpenRouterIcon from '../../img/openrouter.png'
 
 
 
@@ -69,6 +71,7 @@ export default function ModelsPage({
     const [newGeminiProvider, setNewGeminiProvider] = useState({ apiKey: '', model: '', description: '', capabilities: {} as any });
     const [newOpenAIProvider, setNewOpenAIProvider] = useState({ apiKey: '', model: '', description: '', capabilities: {} as any });
     const [newAnthropicProvider, setNewAnthropicProvider] = useState({ apiKey: '', model: '', description: '', capabilities: {} as any });
+    const [newOpenRouterProvider, setNewOpenRouterProvider] = useState({ apiKey: '', description: '' });
     const [scannedModels, setScannedModels] = useState<Model[]>([]);
 
     // Editing State
@@ -93,6 +96,7 @@ export default function ModelsPage({
             setNewGeminiProvider({ apiKey: '', model: '', description: '', capabilities: {} });
             setNewOpenAIProvider({ apiKey: '', model: '', description: '', capabilities: {} });
             setNewAnthropicProvider({ apiKey: '', model: '', description: '', capabilities: {} });
+            setNewOpenRouterProvider({ apiKey: '', description: '' });
             setScannedModels([]);
         }
     }, [isModalOpen]);
@@ -309,16 +313,41 @@ export default function ModelsPage({
         setNewAnthropicProvider({ apiKey: '', model: '', description: '', capabilities: {} });
     };
 
+    const handleOpenRouterSave = async () => {
+        if (!config || !newOpenRouterProvider.apiKey) {
+            toast.error("Please provide an API Key");
+            return;
+        }
+
+        const providerToAdd = {
+            description: newOpenRouterProvider.description.trim() || `OpenRouter`,
+            endpoint: 'https://openrouter.ai/api/v1',
+            model: 'openrouter/auto', // Default placeholder
+            apiKey: newOpenRouterProvider.apiKey,
+            capabilities: { vision: true, reasoning: true, trained_for_tool_use: true } // Assume full capabilities for OpenRouter gateway
+        };
+
+        const updatedProviders = [...(config.providers || []), providerToAdd];
+        const newConfig = { ...config, providers: updatedProviders };
+        setConfig(newConfig);
+        await saveConfig(undefined, newConfig);
+        toast.success("Successfully saved OpenRouter provider");
+        setIsModalOpen(false);
+        setNewOpenRouterProvider({ apiKey: '', description: '' });
+    };
+
     const augmentedProviders = config?.providers.map((p, i) => ({ ...p, originalIndex: i })) || [];
     const anthropicModels = augmentedProviders.filter(p => p.endpoint.includes('anthropic.com'));
     const googleModels = augmentedProviders.filter(p => p.endpoint.includes('googleapis.com'));
     const lmStudioModels = augmentedProviders.filter(p => p.endpoint.includes(':1234'));
     const openAIModels = augmentedProviders.filter(p => p.endpoint.includes('api.openai.com'));
+    const openRouterModels = augmentedProviders.filter(p => p.endpoint.includes('openrouter.ai'));
     const otherModels = augmentedProviders.filter(p =>
         !p.endpoint.includes('anthropic.com') &&
         !p.endpoint.includes('googleapis.com') &&
         !p.endpoint.includes(':1234') &&
-        !p.endpoint.includes('api.openai.com')
+        !p.endpoint.includes('api.openai.com') &&
+        !p.endpoint.includes('openrouter.ai')
     );
 
     return (
@@ -376,6 +405,27 @@ export default function ModelsPage({
                                         onRowClick={(i) => handleRowClick(openAIModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(openAIModels[i].originalIndex)}
                                     />
+                                </div>
+                            )}
+
+                            {openRouterModels.length > 0 && (
+                                <div className="space-y-4">
+                                    <Text size="lg" bold={true}>OpenRouter</Text>
+                                    <div className="bg-bg-primary/50 border border-border-color rounded-2xl p-6 flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-white dark:bg-neutral-800 rounded-xl flex items-center justify-center border border-border-color">
+                                                <img src={OpenRouterIcon} className="h-7" alt="OpenRouter" />
+                                            </div>
+                                            <div>
+                                                <Text bold={true}>OpenRouter is active</Text>
+                                                <Text size="sm" secondary={true}>You can now use OpenRouter models with your agents.</Text>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" onClick={() => handleRowClick(openRouterModels[0].originalIndex)}>Edit Configuration</Button>
+                                            <Button size="sm" themed={false} className="!text-rose-500 hover:!bg-rose-500/10" onClick={() => handleDeleteProvider(openRouterModels[0].originalIndex)}>Remove</Button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -485,6 +535,12 @@ export default function ModelsPage({
                             onClick={() => setSelectedProviderType('openai')}
                         >
                             <img src={OpenAIIcon} alt="OpenAI" className="h-6 dark:invert" />
+                        </Button>
+                        <Button
+                            className={`h-12 flex-1 min-w-[140px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'openrouter' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            onClick={() => setSelectedProviderType('openrouter')}
+                        >
+                            <img src={OpenRouterIcon} alt="OpenRouter" className="h-6" />
                         </Button>
                     </div>
 
@@ -636,6 +692,45 @@ export default function ModelsPage({
                                     </div>
                                 }
                             />
+                        </div>
+                    )}
+                    {selectedProviderType === 'openrouter' && (
+                        <div className="animate-in fade-in slide-in-from-top-4 duration-300 space-y-6">
+                            <Card className="space-y-6">
+                                <Text bold={true} size="xl">OpenRouter</Text>
+                                <div className="space-y-4">
+                                    <Input
+                                        label="API KEY"
+                                        icon={faKey}
+                                        currentText={newOpenRouterProvider.apiKey}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: e.target.value }))}
+                                        placeholder="sk-or-v1-..."
+                                        clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: '' }))}
+                                        className="w-full"
+                                    />
+                                    <Input
+                                        label="(optional) Description"
+                                        icon={faAlignLeft}
+                                        currentText={newOpenRouterProvider.description}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, description: e.target.value }))}
+                                        placeholder="My OpenRouter account"
+                                        clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, description: '' }))}
+                                    />
+                                </div>
+                                <Button
+                                    themed={true}
+                                    className="w-full h-12 text-white"
+                                    onClick={handleOpenRouterSave}
+                                    icon={faSave}
+                                >
+                                    Save OpenRouter Configuration
+                                </Button>
+                                <div className="text-center pt-2 border-t border-border-color border-dashed">
+                                    <Text size="sm" secondary={true}>
+                                        Don't have an API key? Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">openrouter.ai/keys</a>
+                                    </Text>
+                                </div>
+                            </Card>
                         </div>
                     )}
                 </div>

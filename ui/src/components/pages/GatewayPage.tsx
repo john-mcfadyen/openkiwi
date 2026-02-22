@@ -108,14 +108,14 @@ export default function GatewayPage({
 
                             <div className="grid grid-cols-1 gap-3">
                                 {connectedClients.length === 0 ? (
-                                    <div className="p-8 bg-bg-primary/50 rounded-2xl text-center">
+                                    <div className="p-8 bg-white dark:bg-bg-primary rounded-2xl text-center">
                                         <Text>No other computers currently connected to this gateway.</Text>
                                     </div>
                                 ) : (
                                     connectedClients.map((client, idx) => (
-                                        <div key={idx} className="bg-bg-primary rounded-2xl p-4 flex items-center justify-between group hover:border-accent-primary/50 transition-all">
+                                        <div key={idx} className="bg-white dark:bg-bg-primary rounded-2xl p-4 flex items-center justify-between group hover:border-accent-primary/50 transition-all">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-white-trans flex items-center justify-center group-hover:text-accent-primary group-hover:bg-accent-primary/10 transition-all">
+                                                <div className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:text-accent-primary group-hover:bg-accent-primary/10 transition-all">
                                                     <Text size="lg">
                                                         <FontAwesomeIcon icon={faDesktop} />
                                                     </Text>

@@ -198,7 +198,7 @@ export default function AgentsPage({
                                             inputClassName="!mt-0 font-emoji text-center pl-0"
                                         />
                                     </div>
-                                    <div className="mb-4 bg-bg-primary/50 bg-white dark:bg-bg-primary rounded-xl p-4">
+                                    <div className="mb-4 bg-white dark:bg-bg-primary rounded-xl p-4">
                                         <div className="flex justify-between items-center">
                                             <div>
                                                 <Text bold={true}><FontAwesomeIcon icon={faHeartPulse} /> Proactive Heartbeat</Text>

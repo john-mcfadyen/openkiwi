@@ -37,6 +37,12 @@ function getProviderEndpoint(providerConfig: LLMProviderConfig): { url: string; 
         return { url: `${normalizedUrl}/messages`, headers };
     }
 
+    // Detect OpenRouter
+    if (normalizedUrl.includes('openrouter.ai')) {
+        headers['HTTP-Referer'] = 'https://openkiwi.ai'; // Optional but recommended
+        headers['X-Title'] = 'OpenKiwi'; // Optional but recommended
+    }
+
     // Standard OpenAI-compatible (LM Studio, OpenAI, etc.)
     const baseUrl = normalizedUrl.endsWith('/v1') ? normalizedUrl : `${normalizedUrl}/v1`;
     return { url: `${baseUrl}/chat/completions`, headers };
