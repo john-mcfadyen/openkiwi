@@ -52,7 +52,7 @@ router.get(/^\/files\/(screenshots|workspace-files)\/(.*)/, (req, res) => {
     const baseDir = fileType === 'screenshots' ? SCREENSHOTS_DIR : WORKSPACE_DIR;
     const fullPath = path.resolve(baseDir, filePathSegment);
 
-    if (!fullPath.startsWith(baseDir)) {
+    if (fullPath !== baseDir && !fullPath.startsWith(baseDir + path.sep)) {
         return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -198,7 +198,7 @@ router.get('/agents/:id/files/:filename', validateAgentId, (req, res) => {
         const agentDir = path.resolve(process.cwd(), 'agents', req.params.id);
         const filePath = path.join(agentDir, req.params.filename);
 
-        if (!filePath.startsWith(agentDir)) {
+        if (filePath !== agentDir && !filePath.startsWith(agentDir + path.sep)) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
@@ -225,7 +225,7 @@ router.post('/agents/:id/files/:filename', validateAgentId, (req, res) => {
         const agentDir = path.resolve(process.cwd(), 'agents', req.params.id);
         const filePath = path.join(agentDir, req.params.filename);
 
-        if (!filePath.startsWith(agentDir)) {
+        if (filePath !== agentDir && !filePath.startsWith(agentDir + path.sep)) {
             return res.status(403).json({ error: 'Access denied' });
         }
 

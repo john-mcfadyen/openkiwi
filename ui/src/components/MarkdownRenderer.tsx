@@ -12,6 +12,41 @@ interface MarkdownRendererProps {
     breaks?: boolean;
 }
 
+const AuthImage = ({ src, alt, ...props }: any) => {
+    const [blobUrl, setBlobUrl] = React.useState<string>('');
+
+    React.useEffect(() => {
+        if (!src?.startsWith('/api/files/')) {
+            setBlobUrl(src);
+            return;
+        }
+
+        const gatewayToken = localStorage.getItem('gateway_token') || '';
+
+        let currentBlobUrl = '';
+
+        fetch(src, {
+            headers: {
+                'Authorization': `Bearer ${gatewayToken}`
+            }
+        })
+            .then(res => res.ok ? res.blob() : Promise.reject('Failed to load image'))
+            .then(blob => {
+                currentBlobUrl = URL.createObjectURL(blob);
+                setBlobUrl(currentBlobUrl);
+            })
+            .catch(console.error);
+
+        return () => {
+            if (currentBlobUrl && currentBlobUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(currentBlobUrl);
+            }
+        };
+    }, [src]);
+
+    return <img src={blobUrl || src} alt={alt} {...props} />;
+};
+
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = '', breaks = true }) => {
     const gatewayToken = localStorage.getItem('gateway_token') || '';
 
@@ -19,13 +54,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
     const processedContent = content
         // Ensure space after hash for headings
         .replace(/^(#{1,6})([^# \n])/gm, '$1 $2')
-        // Rewrite image URLs to use the authenticated proxy and include the token if not already signed
+        // Rewrite image URLs to use the authenticated proxy
         .replace(/(?<!\/api\/files\/)(\/screenshots\/|\/workspace-files\/)([^? \n\)]+)/g, (match, prefix, filename) => {
-            // If it already has a signature or token, leave it alone
-            if (match.includes('?sig=') || match.includes('?token=')) return match;
-
             const type = prefix.includes('screenshots') ? 'screenshots' : 'workspace-files';
-            return `/api/files/${type}/${filename}?token=${gatewayToken}`;
+            return `/api/files/${type}/${filename}`;
         });
 
     const plugins = [remarkGfm];
@@ -36,6 +68,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
             <ReactMarkdown
                 remarkPlugins={plugins as any}
                 components={{
+                    img: AuthImage,
                     pre: ({ children }) => <>{children}</>,
                     code({ node, inline, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || '');

@@ -42,7 +42,7 @@ export default {
                 const targetDir = filename ? path.join(WORKSPACE_DIR, filename) : WORKSPACE_DIR;
 
                 // Security check
-                if (!targetDir.startsWith(WORKSPACE_DIR)) {
+                if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
                     throw new Error('Access denied: Directory is outside of workspace');
                 }
 
@@ -64,7 +64,7 @@ export default {
             if (!filename) throw new Error('Filename or path is required for this action');
 
             const safePath = path.join(WORKSPACE_DIR, filename);
-            if (!safePath.startsWith(WORKSPACE_DIR)) {
+            if (safePath !== WORKSPACE_DIR && !safePath.startsWith(WORKSPACE_DIR + path.sep)) {
                 throw new Error('Access denied: File or directory is outside of workspace');
             }
 
@@ -102,7 +102,7 @@ export default {
                     if (!newFilename) throw new Error('newFilename is required for "move" action');
 
                     const destPath = path.join(WORKSPACE_DIR, newFilename);
-                    if (!destPath.startsWith(WORKSPACE_DIR)) {
+                    if (destPath !== WORKSPACE_DIR && !destPath.startsWith(WORKSPACE_DIR + path.sep)) {
                         throw new Error('Access denied: Destination is outside of workspace');
                     }
 
@@ -120,7 +120,7 @@ export default {
                     if (!newFilename) throw new Error('newFilename is required for "copy" action');
 
                     const copyDestPath = path.join(WORKSPACE_DIR, newFilename);
-                    if (!copyDestPath.startsWith(WORKSPACE_DIR)) {
+                    if (copyDestPath !== WORKSPACE_DIR && !copyDestPath.startsWith(WORKSPACE_DIR + path.sep)) {
                         throw new Error('Access denied: Destination is outside of workspace');
                     }
 

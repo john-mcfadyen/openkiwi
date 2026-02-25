@@ -101,30 +101,49 @@ ${globalSystemPrompt}`.trim();
         }
         fs.mkdirSync(agentDir);
 
-        // Helper to read template files
-        const readTemplate = (filename: string): string => {
-            const templatePath = path.join(TEMPLATE_DIR, filename);
-            if (fs.existsSync(templatePath)) {
-                return fs.readFileSync(templatePath, 'utf-8');
+        // Copy all files from template directory if it exists
+        if (fs.existsSync(TEMPLATE_DIR)) {
+            const copyRecursive = (src: string, dest: string) => {
+                if (!fs.existsSync(dest)) {
+                    fs.mkdirSync(dest, { recursive: true });
+                }
+                const entries = fs.readdirSync(src, { withFileTypes: true });
+                for (const entry of entries) {
+                    const srcPath = path.join(src, entry.name);
+                    const destPath = path.join(dest, entry.name);
+                    if (entry.isDirectory()) {
+                        copyRecursive(srcPath, destPath);
+                    } else if (entry.isFile()) {
+                        let content: string | Buffer = fs.readFileSync(srcPath);
+                        // Apply replacements for specific text files
+                        if (entry.name === 'IDENTITY.md') {
+                            let textContent = content.toString('utf-8');
+                            textContent = textContent.replace(/\${name}/g, name);
+                            fs.writeFileSync(destPath, textContent, 'utf-8');
+                        } else {
+                            fs.writeFileSync(destPath, content);
+                        }
+                    }
+                }
+            };
+            copyRecursive(TEMPLATE_DIR, agentDir);
+        }
+
+        // Create config if it doesn't exist (it might have been copied from template)
+        const configPath = path.join(agentDir, 'config.json');
+        if (!fs.existsSync(configPath)) {
+            const config = { name, emoji: '' };
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+        } else {
+            // If config exists, ensure name is set correctly
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                config.name = name;
+                fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+            } catch (e) {
+                console.error(`Failed to update name in copied config for agent ${id}`);
             }
-            return '';
-        };
-
-        // Get template contents
-        const identity = readTemplate('IDENTITY.md').replace(/\${name}/g, name);
-        const soul = readTemplate('SOUL.md');
-        const memory = readTemplate('MEMORY.md');
-        const heartbeat = readTemplate('HEARTBEAT.md');
-
-        // Write files
-        fs.writeFileSync(path.join(agentDir, 'IDENTITY.md'), identity, 'utf-8');
-        fs.writeFileSync(path.join(agentDir, 'SOUL.md'), soul, 'utf-8');
-        fs.writeFileSync(path.join(agentDir, 'MEMORY.md'), memory, 'utf-8');
-        fs.writeFileSync(path.join(agentDir, 'HEARTBEAT.md'), heartbeat, 'utf-8');
-
-        // Create config
-        const config = { name, emoji: '' };
-        fs.writeFileSync(path.join(agentDir, 'config.json'), JSON.stringify(config, null, 2), 'utf-8');
+        }
 
         // Return the newly created agent
         return this.getAgent(id)!;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { faPlus, faUser, faSmile, faSave, faClock, faFileText, faBrain, faMicrochip, faHeartPulse } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faUser, faSmile, faSave, faClock, faFileText, faBrain, faMicrochip, faHeartPulse, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Button from '../Button'
 import Card from '../Card'
@@ -63,6 +63,8 @@ export default function AgentsPage({
     const [newAgentName, setNewAgentName] = useState('')
     const [creating, setCreating] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [deletingAgent, setDeletingAgent] = useState(false)
 
     // Use selectedAgentId from props
     const selectedAgentId = selectedAgentIdFromParent
@@ -117,6 +119,33 @@ export default function AgentsPage({
             setError(error instanceof Error ? error.message : 'Failed to create agent')
         } finally {
             setCreating(false)
+        }
+    }
+
+    const handleDeleteAgent = async () => {
+        if (!selectedAgentId) return
+
+        try {
+            setDeletingAgent(true)
+            const response = await fetch(`${gatewayAddr}/api/agents/${selectedAgentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${gatewayToken}`
+                }
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to delete agent')
+            }
+
+            await fetchAgents()
+            setSelectedAgentId('')
+            setIsDeleteModalOpen(false)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to delete agent')
+        } finally {
+            setDeletingAgent(false)
         }
     }
 
@@ -349,6 +378,15 @@ export default function AgentsPage({
                                     />
 
                                 </div>
+
+                                <Button
+                                    variant="danger"
+                                    className="w-full mt-4"
+                                    onClick={() => setIsDeleteModalOpen(true)}
+                                    icon={faTrash}
+                                >
+                                    Delete Agent
+                                </Button>
                             </div>
                         </Card>
                     ) : (
@@ -423,6 +461,60 @@ export default function AgentsPage({
                             ) : (
                                 'Create Agent'
                             )}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Agent Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false)
+                    setError(null)
+                }}
+                title="Delete Agent"
+                className="!max-w-md"
+            >
+                <div className="p-6 space-y-6 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 text-2xl">
+                            <FontAwesomeIcon icon={faTrash} />
+                        </div>
+                        <div className="space-y-1">
+                            <Text bold={true} size="lg">Are you sure?</Text>
+                            <Text secondary={true} size="sm">
+                                This will permanently delete <b>{selectedAgent?.name}</b> and all of its associated files, including identity, soul, and memory.
+                            </Text>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 text-left">
+                            <p className="text-sm text-rose-500">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 mt-6">
+                        <Button
+                            themed={false}
+                            className="flex-1"
+                            onClick={() => {
+                                setIsDeleteModalOpen(false)
+                                setError(null)
+                            }}
+                            disabled={deletingAgent}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            className="flex-1"
+                            onClick={handleDeleteAgent}
+                            disabled={deletingAgent}
+                            icon={deletingAgent ? undefined : faTrash}
+                        >
+                            {deletingAgent ? 'Deleting...' : 'Confirm Delete'}
                         </Button>
                     </div>
                 </div>
