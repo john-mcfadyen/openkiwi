@@ -6,6 +6,7 @@ import { loadConfig } from './config-manager.js';
 import { streamChatCompletion } from './llm-provider.js';
 import { ToolManager } from './tool-manager.js';
 import { logger } from './logger.js';
+import { runAgentLoop } from './agent-loop.js';
 
 export class HeartbeatManager {
     private static jobs: Map<string, any> = new Map();
@@ -145,127 +146,60 @@ Please execute these instructions now.
             ];
 
             // Execute Loop
-            let toolLoop = true;
-            let iterations = 0;
-            const MAX_ITERATIONS = 10; // Prevent infinite loops
+            const { finalResponse: fullContent } = await runAgentLoop({
+                agentId: agent.id,
+                sessionId: 'heartbeat',
+                llmConfig,
+                messages: messages,
+                maxLoops: 10,
+                signToolUrls: false
+            });
 
-            while (toolLoop && iterations < MAX_ITERATIONS) {
-                iterations++;
-                let fullContent = '';
-                let toolCalls: any[] = [];
+            // Parse thinking content
+            let contentToLog = fullContent;
+            let thinkingContent = '';
 
-                // Call LLM
-                for await (const delta of streamChatCompletion(llmConfig, messages, ToolManager.getToolDefinitions())) {
-                    if (delta.content) fullContent += delta.content;
-                    if (delta.tool_calls) {
-                        for (const toolCall of delta.tool_calls) {
-                            if (!toolCalls[toolCall.index]) {
-                                toolCalls[toolCall.index] = toolCall;
-                            } else {
-                                if (toolCall.function?.arguments) {
-                                    toolCalls[toolCall.index].function.arguments += toolCall.function.arguments;
-                                }
-                            }
-                        }
-                    }
-                    if (delta.usage) {
-                        logger.log({
-                            type: 'usage',
-                            level: 'info',
-                            agentId: agent.id,
-                            sessionId: 'heartbeat',
-                            message: '[Heartbeat] Token usage report',
-                            data: delta.usage
-                        });
-                    }
-                }
+            const thinkStart = fullContent.indexOf('<think>');
+            const thinkEnd = fullContent.indexOf('</think>');
 
-                const actualToolCalls = toolCalls.filter(Boolean);
-
-                if (actualToolCalls.length > 0) {
-                    messages.push({ role: 'assistant', content: fullContent || null, tool_calls: actualToolCalls });
-
-                    for (const toolCall of actualToolCalls) {
-                        const name = toolCall.function.name;
-                        const args = JSON.parse(toolCall.function.arguments || '{}');
-
-                        logger.log({
-                            type: 'tool',
-                            level: 'info',
-                            agentId: agent.id,
-                            sessionId: 'heartbeat',
-                            message: `[Heartbeat] Tool executed: ${name}`,
-                            data: { name, args }
-                        });
-
-                        try {
-                            const result = await ToolManager.callTool(name, args, { agentId: agent.id });
-                            messages.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name: name,
-                                content: JSON.stringify(result)
-                            });
-                        } catch (err) {
-                            console.error(`[Heartbeat] Tool error ${name}:`, err);
-                            messages.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name: name,
-                                content: JSON.stringify({ error: String(err) })
-                            });
-                        }
-                    }
+            if (thinkStart !== -1) {
+                if (thinkEnd !== -1) {
+                    // Complete think block
+                    thinkingContent = fullContent.substring(thinkStart + 7, thinkEnd).trim();
+                    contentToLog = fullContent.substring(0, thinkStart) + fullContent.substring(thinkEnd + 8);
                 } else {
-                    toolLoop = false;
-
-                    // Parse thinking content
-                    let contentToLog = fullContent;
-                    let thinkingContent = '';
-
-                    const thinkStart = fullContent.indexOf('<think>');
-                    const thinkEnd = fullContent.indexOf('</think>');
-
-                    if (thinkStart !== -1) {
-                        if (thinkEnd !== -1) {
-                            // Complete think block
-                            thinkingContent = fullContent.substring(thinkStart + 7, thinkEnd).trim();
-                            contentToLog = fullContent.substring(0, thinkStart) + fullContent.substring(thinkEnd + 8);
-                        } else {
-                            // Incomplete think block (model forgot to close or was truncated)
-                            // We treat everything after <think> as thinking content
-                            thinkingContent = fullContent.substring(thinkStart + 7).trim();
-                            contentToLog = fullContent.substring(0, thinkStart);
-                        }
-                    }
-                    contentToLog = contentToLog.trim();
-
-                    // Log reasoning if enabled and present
-                    if (thinkingContent && currentConfig.chat.showReasoning) {
-                        logger.log({
-                            type: 'thinking',
-                            level: 'info',
-                            agentId: agent.id,
-                            sessionId: 'heartbeat',
-                            message: `[Heartbeat] Thinking process`,
-                            data: thinkingContent
-                        });
-                    }
-
-                    // Log final response (cleaned or full depending on parsing)
-                    if (contentToLog) {
-                        logger.log({
-                            type: 'response',
-                            level: 'info',
-                            agentId: agent.id,
-                            sessionId: 'heartbeat',
-                            message: `[Heartbeat] Completed execution`,
-                            data: contentToLog
-                        });
-                    }
-                    console.log(`💓 Heartbeat finished for ${agent.name}:`, contentToLog.substring(0, 100) + '...');
+                    // Incomplete think block (model forgot to close or was truncated)
+                    // We treat everything after <think> as thinking content
+                    thinkingContent = fullContent.substring(thinkStart + 7).trim();
+                    contentToLog = fullContent.substring(0, thinkStart);
                 }
             }
+            contentToLog = contentToLog.trim();
+
+            // Log reasoning if enabled and present
+            if (thinkingContent && currentConfig.chat.showReasoning) {
+                logger.log({
+                    type: 'thinking',
+                    level: 'info',
+                    agentId: agent.id,
+                    sessionId: 'heartbeat',
+                    message: `[Heartbeat] Thinking process`,
+                    data: thinkingContent
+                });
+            }
+
+            // Log final response (cleaned or full depending on parsing)
+            if (contentToLog) {
+                logger.log({
+                    type: 'response',
+                    level: 'info',
+                    agentId: agent.id,
+                    sessionId: 'heartbeat',
+                    message: `[Heartbeat] Completed execution`,
+                    data: contentToLog
+                });
+            }
+            console.log(`💓 Heartbeat finished for ${agent.name}:`, contentToLog.substring(0, 100) + '...');
         } catch (error) {
             console.error(`❌ Error during heartbeat execution for ${agent.name}:`, error);
         } finally {

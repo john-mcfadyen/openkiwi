@@ -8,6 +8,7 @@ import { logger } from './logger.js';
 import { loadConfig } from './config-manager.js';
 import { signUrl } from './security.js';
 import { processVisionMessages } from './vision.js';
+import { runAgentLoop } from './agent-loop.js';
 
 /**
  * Extracts text content from various WhatsApp message types
@@ -174,91 +175,15 @@ export function initWhatsAppHandler() {
             const validMessages = session.messages.filter((msg: any) => msg.role !== 'reasoning');
             payload.push(...validMessages);
 
-            let toolLoop = true;
-            let finalAiResponse = '';
-            let loopCount = 0;
-            const MAX_LOOPS = 5;
-
-            const chatHistory = processVisionMessages([...payload], !!providerConfig?.capabilities?.vision);
-
-            while (toolLoop && loopCount < MAX_LOOPS) {
-                loopCount++;
-                let fullContent = '';
-                let toolCalls: any[] = [];
-
-                const processedHistory = processVisionMessages([...chatHistory], !!providerConfig?.capabilities?.vision);
-
-                for await (const delta of streamChatCompletion(llmConfig, processedHistory, ToolManager.getToolDefinitions())) {
-                    if (delta.content) {
-                        fullContent += delta.content;
-                    }
-                    if (delta.tool_calls) {
-                        for (const toolCall of delta.tool_calls) {
-                            if (!toolCalls[toolCall.index]) {
-                                toolCalls[toolCall.index] = toolCall;
-                            } else {
-                                if (toolCall.function?.arguments) {
-                                    toolCalls[toolCall.index].function.arguments += toolCall.function.arguments;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                const actualToolCalls = toolCalls.filter(Boolean);
-
-                if (actualToolCalls.length > 0) {
-                    const assistantMsg = { role: 'assistant', content: fullContent || null, tool_calls: actualToolCalls };
-                    chatHistory.push(assistantMsg);
-
-                    for (const toolCall of actualToolCalls) {
-                        const name = toolCall.function.name;
-                        const args = JSON.parse(toolCall.function.arguments || '{}');
-
-                        try {
-                            let result = await ToolManager.callTool(name, args, { agentId });
-
-                            if (result && typeof result === 'object') {
-                                if (result.screenshot_url) result.screenshot_url = signUrl(result.screenshot_url);
-                                if (result.image_url) result.image_url = signUrl(result.image_url);
-                            }
-
-                            logger.log({
-                                type: 'tool',
-                                level: 'info',
-                                agentId,
-                                sessionId: safeSessionId,
-                                message: `Tool executed: ${name}`,
-                                data: { name, args, result }
-                            });
-                            chatHistory.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name,
-                                content: JSON.stringify(result)
-                            });
-                        } catch (err) {
-                            logger.log({
-                                type: 'error',
-                                level: 'error',
-                                agentId,
-                                sessionId: safeSessionId,
-                                message: `Tool execution failed: ${name}`,
-                                data: { name, args, error: String(err) }
-                            });
-                            chatHistory.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name,
-                                content: JSON.stringify({ error: String(err) })
-                            });
-                        }
-                    }
-                } else {
-                    finalAiResponse = fullContent;
-                    toolLoop = false;
-                }
-            }
+            const { finalResponse: finalAiResponse } = await runAgentLoop({
+                agentId,
+                sessionId: safeSessionId,
+                llmConfig,
+                messages: payload,
+                visionEnabled: !!providerConfig?.capabilities?.vision,
+                maxLoops: 5,
+                signToolUrls: true
+            });
 
             if (finalAiResponse) {
                 const cleanResponse = finalAiResponse.replace(/<(think|thought|reasoning)>[\s\S]*?<\/\1>/gi, '').trim();

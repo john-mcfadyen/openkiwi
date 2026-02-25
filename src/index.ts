@@ -16,6 +16,7 @@ import { WAMessage, areJidsSameUser, jidNormalizedUser } from '@whiskeysockets/b
 import { authMiddleware, signUrl, SCREENSHOTS_DIR, WORKSPACE_DIR } from './security.js';
 import { initWhatsAppHandler } from './WhatsApp.js';
 import { processVisionMessages } from './vision.js';
+import { runAgentLoop } from './agent-loop.js';
 import apiRouter, { connectedClients } from './routes.js';
 
 
@@ -325,150 +326,33 @@ wss.on('connection', (ws, req) => {
                 data: userMessages[userMessages.length - 1]?.content || 'Empty message'
             });
 
-            const chatHistory = processVisionMessages([...payload], !!providerConfig?.capabilities?.vision);
-            let toolLoop = true;
-            let finalAiResponse = '';
-            const MAX_LOOPS = 5;
-            let loopCount = 0;
-            let totalUsage = { completion_tokens: 0, prompt_tokens: 0, total_tokens: 0 };
-            let lastTps = 0;
-
-            while (toolLoop && loopCount < MAX_LOOPS) {
-                loopCount++;
-                let fullContent = '';
-                let toolCalls: any[] = [];
-
-                // Process vision messages in each loop to catch images returned by tools
-                const processedHistory = processVisionMessages([...chatHistory], !!providerConfig?.capabilities?.vision);
-
-                let firstTokenTime = 0;
-                const requestStartTime = Date.now();
-
-                for await (const delta of streamChatCompletion(llmConfig, processedHistory, ToolManager.getToolDefinitions())) {
-                    if (delta.content) {
-                        if (!firstTokenTime) firstTokenTime = Date.now();
-                        if (!fullContent) console.log('[WS] Received first delta from LLM');
-                        fullContent += delta.content;
-                        ws.send(JSON.stringify({ type: 'delta', content: delta.content }));
-                    }
-                    if (delta.tool_calls) {
-                        for (const toolCall of delta.tool_calls) {
-                            if (!toolCalls[toolCall.index]) {
-                                toolCalls[toolCall.index] = toolCall;
-                            } else {
-                                if (toolCall.function?.arguments) {
-                                    toolCalls[toolCall.index].function.arguments += toolCall.function.arguments;
-                                }
-                            }
-                        }
-                    }
-                    if (delta.usage || delta.stats) {
-                        const usage = delta.usage || {};
-                        const stats = delta.stats || {};
-
-                        // Calculate TPS (Tokens Per Second)
-                        const endTime = Date.now();
-                        const durationSeconds = (endTime - (firstTokenTime || requestStartTime)) / 1000;
-
-                        const completionTokens = usage.completion_tokens || usage.output_tokens || stats.total_output_tokens || 0;
-                        const promptTokens = usage.prompt_tokens || usage.input_tokens || stats.input_tokens || 0;
-
-                        // Use provider-supplied TPS if available (LM Studio), otherwise calculate
-                        let tps = stats.tokens_per_second || usage.tokens_per_second;
-                        if (tps === undefined || tps === null) {
-                            tps = durationSeconds > 0 ? (completionTokens / durationSeconds) : 0;
-                        }
-
-                        lastTps = parseFloat(tps.toFixed(1));
-                        totalUsage.completion_tokens += completionTokens;
-                        totalUsage.prompt_tokens += promptTokens;
-                        totalUsage.total_tokens += (completionTokens + promptTokens);
-
-                        const usageStats = {
-                            ...usage,
-                            ...stats,
-                            tps: lastTps,
-                            duration: parseFloat(durationSeconds.toFixed(2))
-                        };
-
-                        logger.log({
-                            type: 'usage',
-                            level: 'info',
-                            agentId: effectiveAgentId,
-                            sessionId,
-                            message: 'Token usage report',
-                            data: usageStats
-                        });
-
-                        ws.send(JSON.stringify({ type: 'usage', usage: usageStats }));
-                    }
+            let fullContent = '';
+            const { finalResponse: finalAiResponse, lastTps, usage: totalUsage } = await runAgentLoop({
+                agentId: effectiveAgentId,
+                sessionId: sessionId || "unknown",
+                llmConfig,
+                messages: payload,
+                visionEnabled: !!providerConfig?.capabilities?.vision,
+                maxLoops: 5,
+                signToolUrls: true,
+                onDelta: (content: string) => {
+                    if (!fullContent) console.log('[WS] Received first delta from LLM');
+                    fullContent += content;
+                    ws.send(JSON.stringify({ type: 'delta', content }));
+                },
+                onUsage: (usageStats: any) => {
+                    ws.send(JSON.stringify({ type: 'usage', usage: usageStats }));
                 }
+            });
 
-                // Filtering empty slots in toolCalls (stream index might skip)
-                const actualToolCalls = toolCalls.filter(Boolean);
-
-                if (actualToolCalls.length > 0) {
-                    const assistantMsg = { role: 'assistant', content: fullContent || null, tool_calls: actualToolCalls };
-                    chatHistory.push(assistantMsg);
-
-                    for (const toolCall of actualToolCalls) {
-                        const name = toolCall.function.name;
-                        const args = JSON.parse(toolCall.function.arguments || '{}');
-
-                        try {
-                            let result = await ToolManager.callTool(name, args, { agentId: effectiveAgentId });
-
-                            // Sign any URLs in the tool result so the LLM gets signed links
-                            if (result && typeof result === 'object') {
-                                if (result.screenshot_url) result.screenshot_url = signUrl(result.screenshot_url);
-                                if (result.image_url) result.image_url = signUrl(result.image_url);
-                            }
-
-                            logger.log({
-                                type: 'tool',
-                                level: 'info',
-                                agentId: effectiveAgentId,
-                                sessionId,
-                                message: `Tool executed: ${name}`,
-                                data: { name, args, result }
-                            });
-                            chatHistory.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name: name,
-                                content: JSON.stringify(result)
-                            });
-                        } catch (err) {
-                            logger.log({
-                                type: 'error',
-                                level: 'error',
-                                agentId: effectiveAgentId,
-                                sessionId,
-                                message: `Tool execution failed: ${name}`,
-                                data: { name, args, error: String(err) }
-                            });
-                            chatHistory.push({
-                                role: 'tool',
-                                tool_call_id: toolCall.id,
-                                name: name,
-                                content: JSON.stringify({ error: String(err) })
-                            });
-                        }
-                    }
-                } else {
-                    finalAiResponse = fullContent;
-                    toolLoop = false;
-
-                    logger.log({
-                        type: 'response',
-                        level: 'info',
-                        agentId: effectiveAgentId,
-                        sessionId,
-                        message: `Response from ${effectiveAgentId}`,
-                        data: finalAiResponse
-                    });
-                }
-            }
+            logger.log({
+                type: 'response',
+                level: 'info',
+                agentId: effectiveAgentId,
+                sessionId,
+                message: `Response from ${effectiveAgentId}`,
+                data: finalAiResponse
+            });
 
             ws.send(JSON.stringify({ type: 'done' }));
 

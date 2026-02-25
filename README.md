@@ -56,11 +56,16 @@ How is OpenKIWI different?
 ![](docs/images/whatsapp-1.png)
 ![](docs/images/whatsapp-2.png)
 
+Start messaging agents from your phone:
+
+<img src="docs/images/whatsapp-3.png" width="200"/>
+
 ### Onboarding Complete 🎉
 * Start chatting with your agent
 * Analyze images
 * Write code
 * Build websites
+* Schedule ongoing tasks for your agents
 * And much more
 
 ![](docs/images/chat-1.png)

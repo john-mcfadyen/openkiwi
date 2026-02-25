@@ -12,6 +12,7 @@ export interface Agent {
     identity: string;
     soul: string;
     memory: string;
+    rules: string;
     heartbeatInstructions: string;
     systemPrompt: string;
     provider?: string;
@@ -42,6 +43,7 @@ export class AgentManager {
         const soul = this.readFile(path.join(agentDir, 'SOUL.md'));
         const memory = this.readFile(path.join(agentDir, 'MEMORY.md'));
         const heartbeatInstructions = this.readFile(path.join(agentDir, 'HEARTBEAT.md'));
+        const rules = this.readFile(path.join(agentDir, 'AGENT.md'));
 
         // Load agent-specific config if it exists
         const configPath = path.join(agentDir, 'config.json');
@@ -59,6 +61,8 @@ export class AgentManager {
         const systemPrompt = `
 ${identity}
 
+${rules}
+
 ${soul}
 
 ${memory || 'Your memory is currently empty.'}
@@ -73,6 +77,7 @@ ${globalSystemPrompt}`.trim();
             identity,
             soul,
             memory,
+            rules,
             heartbeatInstructions,
             systemPrompt,
             provider: agentConfig.provider,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { faPlus, faUser, faSmile, faSave, faClock, faFileText, faBrain, faMicrochip, faHeartPulse, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faUser, faSmile, faSave, faClock, faBrain, faMicrochip, faHeartPulse, faTrash, faIdBadge, faShield } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Button from '../Button'
 import Card from '../Card'
@@ -20,6 +20,7 @@ interface Agent {
     identity: string;
     soul: string;
     memory?: string;
+    rules: string;
     heartbeatInstructions?: string;
     heartbeat?: {
         enabled: boolean;
@@ -348,7 +349,7 @@ export default function AgentsPage({
                                     <AgentFileButton
                                         title="IDENTITY.md"
                                         description="Core instructions"
-                                        icon={faFileText}
+                                        icon={faIdBadge}
                                         iconColorClass="bg-sky-500/10"
                                         onClick={() => setViewingFile({ title: 'IDENTITY.md', content: selectedAgent.identity, isEditing: true, agentId: selectedAgent.id })}
                                     />
@@ -375,6 +376,14 @@ export default function AgentsPage({
                                         icon={faHeartPulse}
                                         iconColorClass="bg-rose-400/10"
                                         onClick={() => setViewingFile({ title: 'HEARTBEAT.md', content: selectedAgent.heartbeatInstructions || '', isEditing: true, agentId: selectedAgent.id })}
+                                    />
+
+                                    <AgentFileButton
+                                        title="AGENT.md"
+                                        description="Rules & Guardrails"
+                                        icon={faShield}
+                                        iconColorClass="bg-indigo-400/10"
+                                        onClick={() => setViewingFile({ title: 'AGENT.md', content: selectedAgent.rules || '', isEditing: true, agentId: selectedAgent.id })}
                                     />
 
                                 </div>
