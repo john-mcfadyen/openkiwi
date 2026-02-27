@@ -16,7 +16,7 @@ const AuthImage = ({ src, alt, ...props }: any) => {
     const [blobUrl, setBlobUrl] = React.useState<string>('');
 
     React.useEffect(() => {
-        if (!src?.startsWith('/api/files/')) {
+        if (!src?.startsWith('/api/files/') && !src?.startsWith('/api/tools/files')) {
             setBlobUrl(src);
             return;
         }

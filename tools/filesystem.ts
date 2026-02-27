@@ -10,7 +10,7 @@ if (!fs.existsSync(WORKSPACE_DIR)) {
 
 export default {
     definition: {
-        name: 'manage_files',
+        name: 'File Manager',
         description: 'Manage files and directories in your local workspace. Actions: ls, read, write, delete, mkdir, move, copy.',
         parameters: {
             type: 'object',

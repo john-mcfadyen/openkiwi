@@ -147,7 +147,20 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
             const systemPrompt = agent?.systemPrompt || currentConfig.global?.systemPrompt || "You are a helpful AI assistant.";
 
             if (systemPrompt) {
-                payload.push({ role: 'system', content: systemPrompt });
+                const now = new Date();
+                const timeString = now.toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
+                });
+
+                const promptWithTime = `${systemPrompt}\n\n[Current Time: ${timeString}]`;
+                payload.push({ role: 'system', content: promptWithTime });
             }
 
             // Determine provider

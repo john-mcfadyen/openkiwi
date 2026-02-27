@@ -101,6 +101,7 @@ interface ToolDefinition {
   };
   filename?: string;
   isRegistered?: boolean;
+  hasReadme?: boolean;
 }
 
 
@@ -517,16 +518,22 @@ function App() {
       ];
 
       // Add files that aren't registered yet
-      data.availableFiles.forEach(file => {
-        const alreadyRegistered = combinedTools.some(t => t.filename === file);
-        if (!alreadyRegistered) {
+      (data.availableFiles as any[]).forEach(toolFile => {
+        const file = typeof toolFile === 'string' ? toolFile : toolFile.filename;
+        const hasReadme = typeof toolFile === 'string' ? false : toolFile.hasReadme;
+
+        const existingTool = combinedTools.find(t => t.filename === file);
+        if (!existingTool) {
           combinedTools.push({
             name: file,
             description: "This tool is currently disabled. Enable it to load its capabilities.",
             parameters: { type: 'object', properties: {} },
             filename: file,
-            isRegistered: false
+            isRegistered: false,
+            hasReadme
           });
+        } else {
+          existingTool.hasReadme = hasReadme;
         }
       });
 
@@ -1075,6 +1082,7 @@ function App() {
               onLogoutWhatsApp={onLogoutWhatsApp}
               onConnectWhatsApp={onConnectWhatsApp}
               gatewayAddr={gatewayAddr}
+              gatewayToken={gatewayToken}
             />
           )}
         </main>

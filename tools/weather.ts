@@ -9,7 +9,7 @@
 
 export default {
     definition: {
-        name: 'get_weather',
+        name: 'Weather',
         description: 'Get the current weather conditions for a specific location. You can provide a city and state (e.g. San Francisco, CA), a zip code (e.g. 90210), or any other location name.',
         parameters: {
             type: 'object',
@@ -54,7 +54,7 @@ export default {
 
             // 2. Fetch Weather
             // Using Open-Meteo
-            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&temperature_unit=${unit}&wind_speed_unit=kmh`;
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&temperature_unit=${unit}&wind_speed_unit=kmh&timezone=auto`;
 
             const weatherResponse = await fetch(weatherUrl);
 
@@ -93,6 +93,7 @@ export default {
                 humidity: `${current.relative_humidity_2m} ${current_units.relative_humidity_2m}`,
                 wind_speed: `${current.wind_speed_10m} ${current_units.wind_speed_10m}`,
                 precipitation: `${current.precipitation} ${current_units.precipitation}`,
+                timezone: weatherData.timezone,
                 timestamp: current.time
             };
 

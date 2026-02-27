@@ -10,6 +10,13 @@ export interface ToolDefinition {
         properties: Record<string, any>;
         required?: string[];
     };
+    filename?: string;
+    hasReadme?: boolean;
+}
+
+export interface ToolFile {
+    filename: string;
+    hasReadme: boolean;
 }
 
 export interface Tool {
@@ -28,11 +35,12 @@ export class ToolManager {
             fs.mkdirSync(TOOLS_DIR, { recursive: true });
         }
 
-        const files = fs.readdirSync(TOOLS_DIR).filter(f => f.endsWith('.ts') || f.endsWith('.js'));
+        const files = this.getAvailableToolFiles();
         const config = (await import('./config-manager.js')).loadConfig();
         const enabledTools = config.enabledTools || {};
 
-        for (const file of files) {
+        for (const toolFile of files) {
+            const file = toolFile.filename;
             if (!enabledTools[file]) {
                 console.log(`[ToolManager] Skipping disabled tool file: ${file}`);
                 continue;
@@ -43,6 +51,12 @@ export class ToolManager {
                 const toolModule = await import(`file://${fullPath}`); // Use file:// for ESM absolute paths
                 if (toolModule.default && toolModule.default.definition && toolModule.default.handler) {
                     toolModule.default.definition.filename = file;
+
+                    // Check for README.md in the tool's directory
+                    const toolDir = path.dirname(fullPath);
+                    const readmePath = path.join(toolDir, 'README.md');
+                    toolModule.default.definition.hasReadme = fs.existsSync(readmePath);
+
                     this.registerTool(toolModule.default);
                     console.log(`[ToolManager] Loaded external tool: ${toolModule.default.definition.name} (${file})`);
                 } else {
@@ -86,9 +100,41 @@ export class ToolManager {
         return Array.from(this.tools.values()).map(t => t.definition);
     }
 
-    static getAvailableToolFiles(): string[] {
+    static getAvailableToolFiles(): ToolFile[] {
         if (!fs.existsSync(TOOLS_DIR)) return [];
-        return fs.readdirSync(TOOLS_DIR).filter(f => f.endsWith('.ts') || f.endsWith('.js'));
+
+        const files: ToolFile[] = [];
+        const items = fs.readdirSync(TOOLS_DIR, { withFileTypes: true });
+
+        for (const item of items) {
+            if (item.isFile() && (item.name.endsWith('.ts') || item.name.endsWith('.js'))) {
+                files.push({ filename: item.name, hasReadme: false });
+            } else if (item.isDirectory()) {
+                const subDir = path.join(TOOLS_DIR, item.name);
+                const hasReadme = fs.existsSync(path.join(subDir, 'README.md'));
+                const subItems = fs.readdirSync(subDir, { withFileTypes: true });
+                for (const subItem of subItems) {
+                    if (subItem.isFile() && (subItem.name.endsWith('.ts') || subItem.name.endsWith('.js'))) {
+                        files.push({
+                            filename: path.join(item.name, subItem.name),
+                            hasReadme
+                        });
+                    }
+                }
+            }
+        }
+        return files;
+    }
+
+    static getToolReadme(filename: string): string | null {
+        const fullPath = path.join(TOOLS_DIR, filename);
+        const toolDir = path.dirname(fullPath);
+        const readmePath = path.join(toolDir, 'README.md');
+
+        if (fs.existsSync(readmePath)) {
+            return fs.readFileSync(readmePath, 'utf-8');
+        }
+        return null;
     }
 
     static async callTool(name: string, args: any, context?: any): Promise<any> {
