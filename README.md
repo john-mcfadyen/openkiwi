@@ -1,6 +1,4 @@
-<div align="center">
 [![Test Suite](https://github.com/chrispyers/openkiwi/actions/workflows/test.yml/badge.svg)](https://github.com/chrispyers/openkiwi/actions/workflows/test.yml)
-</div>
 
 #### [Jump to Quickstart](#quickstart)
 
