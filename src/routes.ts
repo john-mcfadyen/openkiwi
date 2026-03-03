@@ -25,7 +25,6 @@ router.use((req, res, next) => {
 router.use('/agents', agentsRouter);
 router.use('/sessions', sessionsRouter);
 router.use('/whatsapp', whatsappRouter);
-router.use('/telegram', telegramRouter);
 router.use('/config', configRouter);
 router.use('/tools', toolsRouter);
 router.use('/system', systemRouter);

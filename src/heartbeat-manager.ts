@@ -91,7 +91,8 @@ export class HeartbeatManager {
     }
 
     static async executeHeartbeat(agentId: string) {
-        if (this.executingAgents.has(agentId)) {
+        const taskKey = `${agentId}:heartbeat`;
+        if (this.executingAgents.has(taskKey)) {
             console.log(`⚠️ Heartbeat skipped for ${agentId}: Previous execution still running.`);
             return;
         }
@@ -384,6 +385,8 @@ You have been woken up to work on the Agent Collaboration System.
                 data: null
             });
         }
+    }
+
     private static async deliverToChannels(agentId: string, agent: Agent, channels: HeartbeatChannel[], cleanContent: string, rawContent: string) {
         for (const channel of channels) {
             try {

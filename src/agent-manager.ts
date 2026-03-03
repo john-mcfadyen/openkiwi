@@ -142,7 +142,7 @@ ${globalSystemPrompt}`.trim();
             systemPrompt,
             provider: agentConfig.provider,
             heartbeat: agentConfig.heartbeat,
-            collaboration: agentConfig.collaboration
+            collaboration: agentConfig.collaboration,
             tools: agentConfig.tools
         };
     }

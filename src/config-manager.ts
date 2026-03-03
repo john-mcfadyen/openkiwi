@@ -44,8 +44,8 @@ function decrypt(text: string): string {
         decrypted += decipher.final('utf8');
         return decrypted;
     } catch (e) {
-        console.error('Failed to decrypt value:', e);
-        return text;
+        console.warn('[Config] Failed to decrypt a value (key mismatch or corrupted data). Resetting to empty.');
+        return '';
     }
 }
 

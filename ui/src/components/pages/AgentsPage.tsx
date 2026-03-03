@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { faPlus, faUser, faSmile, faSave, faClock, faBrain, faMicrochip, faHeartPulse, faTrash, faIdBadge, faShield, faClockFour, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faUser, faSmile, faSave, faClock, faBrain, faMicrochip, faHeartPulse, faTrash, faIdBadge, faShield, faClockFour, faUsers, faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Button from '../Button'
 import Card from '../Card'
@@ -297,119 +297,118 @@ export default function AgentsPage({
                                             />
                                         </div>
 
-                                            {(agentForm.heartbeat?.enabled) && (
-                                                <div className="space-y-3 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    <Input
-                                                        label="Cron Schedule"
-                                                        icon={faClock}
-                                                        currentText={agentForm.heartbeat?.schedule || ''}
-                                                        onChange={e => setAgentForm({
-                                                            ...agentForm,
-                                                            heartbeat: {
-                                                                ...agentForm.heartbeat!,
-                                                                schedule: e.target.value
-                                                            }
-                                                        })}
-                                                        clearText={() => setAgentForm({
-                                                            ...agentForm,
-                                                            heartbeat: {
-                                                                ...agentForm.heartbeat!,
-                                                                schedule: ''
-                                                            }
-                                                        })}
-                                                        placeholder="e.g. */10 * * * *"
-                                                        className="!mt-0"
-                                                    />
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {[
-                                                            { label: 'Every 10m', val: '*/10 * * * *' },
-                                                            { label: 'Hourly', val: '0 * * * *' },
-                                                            { label: 'Every 4h', val: '0 */4 * * *' },
-                                                            { label: 'Every 12h', val: '0 */12 * * *' },
-                                                            { label: 'Midnight', val: '0 0 * * *' }
-                                                        ].map(opt => (
-                                                            <Button
-                                                                size="sm"
-                                                                key={opt.label}
-                                                                onClick={() => setAgentForm({
-                                                                    ...agentForm,
-                                                                    heartbeat: {
-                                                                        ...agentForm.heartbeat!,
-                                                                        schedule: opt.val
-                                                                    }
-                                                                })}
-                                                            >
-                                                                {opt.label}
-                                                            </Button>
-                                                        ))}
-                                                    </div>
-                                                    <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg  dark:border-neutral-700/50">
-                                                        <Text size="xs" bold={true} className="uppercase mb-2 block opacity-70">Cron Reference</Text>
-                                                        <div className="grid grid-cols-5 gap-1 text-[10px] font-mono text-center uppercase text-neutral-500 dark:text-neutral-400 mb-1">
-                                                            <div>min</div>
-                                                            <div>hour</div>
-                                                            <div>day</div>
-                                                            <div>month</div>
-                                                            <div>week</div>
-                                                        </div>
-                                                        <div className="grid grid-cols-5 gap-1 font-mono text-center py-1 bg-neutral-100 dark:bg-neutral-900/50 rounded border border-neutral-200 dark:border-neutral-800">
-                                                            <Text>*</Text>
-                                                            <Text>*</Text>
-                                                            <Text>*</Text>
-                                                            <Text>*</Text>
-                                                            <Text>*</Text>
-                                                        </div>
-                                                        <div className="mt-2 text-center">
-                                                            <Text size="sm" secondary={true}>e.g., <Code>0 12 * * *</Code> runs every day at noon.</Text>
-                                                        </div>
-                                                    </div>
-
-                                                    {allowManualHeartbeat && (() => {
-                                                        const agentState = selectedAgentId ? agentStates[selectedAgentId] : undefined
-                                                        const isRunning = agentState?.status === 'working'
-                                                        return (
-                                                            <Button
-                                                                size="md"
-                                                                className={`w-full ${isRunning
-                                                                    ? '!bg-amber-500/10 !text-amber-600 dark:!text-amber-400'
-                                                                    : '!bg-emerald-500/10 hover:!bg-emerald-500/20 dark:!bg-emerald-500/10 dark:hover:!bg-emerald-500/20 !text-emerald-600 dark:!text-emerald-400'
-                                                                }`}
-                                                                onClick={() => setIsHeartbeatModalOpen(true)}
-                                                                icon={faPlay}
-                                                                disabled={isRunning}
-                                                            >
-                                                                {isRunning ? 'Running...' : 'Run Now'}
-                                                            </Button>
-                                                        )
-                                                    })()}
-
+                                        {(agentForm.heartbeat?.enabled) && (
+                                            <div className="space-y-3 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <Input
+                                                    label="Cron Schedule"
+                                                    icon={faClock}
+                                                    currentText={agentForm.heartbeat?.schedule || ''}
+                                                    onChange={e => setAgentForm({
+                                                        ...agentForm,
+                                                        heartbeat: {
+                                                            ...agentForm.heartbeat!,
+                                                            schedule: e.target.value
+                                                        }
+                                                    })}
+                                                    clearText={() => setAgentForm({
+                                                        ...agentForm,
+                                                        heartbeat: {
+                                                            ...agentForm.heartbeat!,
+                                                            schedule: ''
+                                                        }
+                                                    })}
+                                                    placeholder="e.g. */10 * * * *"
+                                                    className="!mt-0"
+                                                />
+                                                <div className="flex flex-wrap gap-2">
+                                                    {[
+                                                        { label: 'Every 10m', val: '*/10 * * * *' },
+                                                        { label: 'Hourly', val: '0 * * * *' },
+                                                        { label: 'Every 4h', val: '0 */4 * * *' },
+                                                        { label: 'Every 12h', val: '0 */12 * * *' },
+                                                        { label: 'Midnight', val: '0 0 * * *' }
+                                                    ].map(opt => (
+                                                        <Button
+                                                            size="sm"
+                                                            key={opt.label}
+                                                            onClick={() => setAgentForm({
+                                                                ...agentForm,
+                                                                heartbeat: {
+                                                                    ...agentForm.heartbeat!,
+                                                                    schedule: opt.val
+                                                                }
+                                                            })}
+                                                        >
+                                                            {opt.label}
+                                                        </Button>
+                                                    ))}
                                                 </div>
-                                            )}
-                                        </div>
+                                                <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg  dark:border-neutral-700/50">
+                                                    <Text size="xs" bold={true} className="uppercase mb-2 block opacity-70">Cron Reference</Text>
+                                                    <div className="grid grid-cols-5 gap-1 text-[10px] font-mono text-center uppercase text-neutral-500 dark:text-neutral-400 mb-1">
+                                                        <div>min</div>
+                                                        <div>hour</div>
+                                                        <div>day</div>
+                                                        <div>month</div>
+                                                        <div>week</div>
+                                                    </div>
+                                                    <div className="grid grid-cols-5 gap-1 font-mono text-center py-1 bg-neutral-100 dark:bg-neutral-900/50 rounded border border-neutral-200 dark:border-neutral-800">
+                                                        <Text>*</Text>
+                                                        <Text>*</Text>
+                                                        <Text>*</Text>
+                                                        <Text>*</Text>
+                                                        <Text>*</Text>
+                                                    </div>
+                                                    <div className="mt-2 text-center">
+                                                        <Text size="sm" secondary={true}>e.g., <Code>0 12 * * *</Code> runs every day at noon.</Text>
+                                                    </div>
+                                                </div>
 
-                                        <div className="mb-4">
-                                            <Select
-                                                label="Model"
-                                                value={agentForm.provider || ''}
-                                                onChange={(e) => setAgentForm({ ...agentForm, provider: e.target.value })}
-                                                options={[
-                                                    { value: '', label: 'Use Global Default' },
-                                                    ...providers.map(p => ({
-                                                        value: p.description,
-                                                        label: p.description
-                                                    }))
-                                                ]}
-                                            />
-                                        </div>
-                                        <Button
-                                            themed={true}
-                                            className="w-full"
-                                            onClick={saveAgentConfig}
-                                            icon={faSave}
-                                        >
-                                            Update Agent Profile
-                                        </Button>
+                                                {allowManualHeartbeat && (() => {
+                                                    const agentState = selectedAgentId ? agentStates[selectedAgentId] : undefined
+                                                    const isRunning = agentState?.status === 'working'
+                                                    return (
+                                                        <Button
+                                                            size="md"
+                                                            className={`w-full ${isRunning
+                                                                ? '!bg-amber-500/10 !text-amber-600 dark:!text-amber-400'
+                                                                : '!bg-emerald-500/10 hover:!bg-emerald-500/20 dark:!bg-emerald-500/10 dark:hover:!bg-emerald-500/20 !text-emerald-600 dark:!text-emerald-400'
+                                                                }`}
+                                                            onClick={() => setIsHeartbeatModalOpen(true)}
+                                                            icon={faPlay}
+                                                            disabled={isRunning}
+                                                        >
+                                                            {isRunning ? 'Running...' : 'Run Now'}
+                                                        </Button>
+                                                    )
+                                                })()}
+
+                                            </div>
+                                        )}
                                     </div>
+
+                                    <div className="mb-4">
+                                        <Select
+                                            label="Model"
+                                            value={agentForm.provider || ''}
+                                            onChange={(e) => setAgentForm({ ...agentForm, provider: e.target.value })}
+                                            options={[
+                                                { value: '', label: 'Use Global Default' },
+                                                ...providers.map(p => ({
+                                                    value: p.description,
+                                                    label: p.description
+                                                }))
+                                            ]}
+                                        />
+                                    </div>
+                                    <Button
+                                        themed={true}
+                                        className="w-full"
+                                        onClick={saveAgentConfig}
+                                        icon={faSave}
+                                    >
+                                        Update Agent Profile
+                                    </Button>
                                 </div>
                             </Card>
 
