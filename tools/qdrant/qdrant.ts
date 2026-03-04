@@ -1,6 +1,6 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { loadConfig } from '../src/config-manager.js';
-import { createEmbedding } from '../src/llm-provider.js';
+import { loadConfig } from '../../src/config-manager.js';
+import { createEmbedding } from '../../src/llm-provider.js';
 
 const DEBUG = process.env.QDRANT_DEBUG === 'true' || process.env.QDRANT_DEBUG === '1';
 
@@ -143,6 +143,7 @@ if (availableStores.length > 0) {
 export default {
     definition: {
         name: 'qdrant',
+        displayName: 'Qdrant',
         description: `Search a Qdrant vector store semantically. Provide a natural language query and store name.${availableStores.length > 0 ? ` Available stores: ${availableStores.join(', ')}` : ''}`,
         parameters: {
             type: 'object',

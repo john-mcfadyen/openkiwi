@@ -2,22 +2,8 @@ import React, { useContext } from "react";
 import { ThemeContext } from "../contexts/ThemeContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import Text from "./Text";
-
-interface SelectProps {
-  id?: string;
-  className?: string;
-  icon?: IconDefinition;
-  label?: string;
-  options: string[] | { value: string; label: string }[];
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  width?: string;
-  disabled?: boolean;
-}
-
-const Select: React.FC<SelectProps> = ({
+const Select = ({
   id,
   className,
   icon,
@@ -44,10 +30,11 @@ const Select: React.FC<SelectProps> = ({
           <select
             id={id}
             disabled={disabled}
+            style={{ backgroundColor: 'var(--select-bg)' }}
             className={`appearance-none border-2 p-2 pr-10 rounded-2xl transition-colors outline-none w-full
             border-neutral-100 dark:border-neutral-700
-            bg-white dark:bg-bg-primary
             hover:border-neutral-200 dark:hover:border-neutral-600
+            text-primary
             ${icon != null ? "pl-11" : "pl-4"}
             ${getThemeInputClasses()} ${className || ""}
           `}

@@ -2,20 +2,10 @@ import React from 'react';
 import Button from './Button';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import DeleteButton from './DeleteButton';
-import { Session, Agent } from '../types';
 import Text from './Text';
 import Tooltip from './Tooltip';
 
-interface SessionButtonProps {
-    session: Session;
-    isActive: boolean;
-    agent?: Agent;
-    onLoadSession: (session: Session) => void;
-    onDeleteSession: (id: string, e: React.MouseEvent) => void;
-    formatTimestamp: (timestamp?: number) => string;
-}
-
-export const SessionButton: React.FC<SessionButtonProps> = ({
+export const SessionButton = ({
     session,
     isActive,
     agent,
@@ -26,14 +16,14 @@ export const SessionButton: React.FC<SessionButtonProps> = ({
     return (
         <Tooltip content={session.summary || session.title} title="Summary" position="right" className="w-full">
             <div
-                className={`group w-full p-2 rounded-xl cursor-pointer flex items-center gap-3 transition-all duration-100 ${isActive ? 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-white' : ' hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-600 dark:text-white'}`}
+                className={`group w-full p-2 rounded-xl cursor-pointer flex items-center gap-3 transition-all duration-100 ${isActive ? 'bg-neutral-100 dark:bg-neutral-700' : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'} text-primary`}
                 onClick={() => onLoadSession(session)}
             >
                 {/* <div className="text-xl flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white-trans rounded-lg">
                 {agent?.emoji || '💬'}
             </div> */}
                 <div className="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
-                    <Text className="text-sm font-medium truncate text-neutral-500 dark:text-neutral-300">
+                    <Text className="text-sm font-medium truncate">
                         {session.summary || session.title}
                     </Text>
                     <Text className="text-xs text-neutral-400 dark:text-neutral-400 truncate">

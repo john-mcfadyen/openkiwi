@@ -9,50 +9,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Button from '../Button'
 import Select from '../Select'
-import { Message, Agent } from '../../types'
 import { AgentChatBubble, UserChatBubble, StreamingChatBubble } from '../ChatBubble'
 import Text from '../Text'
 import Badge from '../Badge'
 import TextArea from '../TextArea'
-
-interface Config {
-
-    chat: {
-        showReasoning: boolean;
-        includeHistory: boolean;
-        generateSummaries: boolean;
-        showTokenMetrics: boolean;
-    };
-    gateway: {
-        port: number;
-    };
-    global?: {
-        systemPrompt: string;
-    };
-    providers: {
-        description: string;
-        endpoint: string;
-        model: string;
-    }[];
-}
-
-interface ChatPageProps {
-    agents: Agent[];
-    selectedAgentId: string;
-    setSelectedAgentId: (id: string) => void;
-    messages: Message[];
-    config: Config | null;
-    isStreaming: boolean;
-    inputText: string;
-    setInputText: (text: string) => void;
-    handleSend: (e: React.FormEvent) => Promise<void>;
-    isGatewayConnected: boolean;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
-    textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-    chatContainerRef: React.RefObject<HTMLDivElement | null>;
-    handleScroll: () => void;
-    formatTimestamp: (timestamp?: number) => string;
-}
+import AgentAvatar from '../AgentAvatar'
 
 export default function ChatPage({
     agents,
@@ -70,7 +31,7 @@ export default function ChatPage({
     chatContainerRef,
     handleScroll,
     formatTimestamp
-}: ChatPageProps) {
+}) {
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
@@ -85,37 +46,26 @@ export default function ChatPage({
     const isNoAgentSelected = !selectedAgentId;
     const isAgentMissing = !currentAgent && !!selectedAgentId;
 
-    const getInitials = (name?: string) => {
-        if (!name) return "AI";
-        const parts = name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return parts[0][0].toUpperCase();
-    };
-
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Agent ToolBar */}
-            <div className="px-6 py-4 border-b border-border-color flex justify-between items-center bg-bg-primary/80 backdrop-blur-md sticky top-0 z-20">
+            <div className="px-6 py-4 border-b border-divider flex justify-between items-center bg-surface/80 backdrop-blur-md sticky top-0 z-20">
                 {isAgentMissing ? (
                     <div className="flex items-center gap-4 w-full">
-                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-xl">
+                        <AgentAvatar className="!bg-neutral-200 dark:!bg-neutral-800">
                             <AlertCircle size={18} className="text-neutral-500" />
-                        </div>
+                        </AgentAvatar>
                         <div className="text-sm font-bold text-neutral-500">
                             Agent Deleted
                         </div>
                     </div>
                 ) : (
                     <div className="flex items-center gap-4 w-full">
-                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl font-bold dark:text-white">
-                            {currentAgent?.emoji || (currentAgent ? getInitials(currentAgent.name) : <Bot size={20} className="text-neutral-400" />)}
-                        </div>
+                        <AgentAvatar agent={currentAgent} />
                         <div>
                             <Select
                                 value={selectedAgentId}
-                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedAgentId(e.target.value)}
+                                onChange={(e) => setSelectedAgentId(e.target.value)}
                                 options={[
                                     { value: '', label: 'Choose an Agent' },
                                     ...agents.map(a => ({ value: a.id, label: `${a.name}` }))
@@ -134,11 +84,7 @@ export default function ChatPage({
             >
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full py-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="w-24 h-24 flex items-center justify-center text-4xl mb-6 animate-bounce-slow">
-                            <Text size="4xl" bold={true}>
-                                {currentAgent?.emoji || (currentAgent ? getInitials(currentAgent.name) : null)}
-                            </Text>
-                        </div>
+                        <AgentAvatar agent={currentAgent} size="xl" className="mb-6 animate-bounce-slow" />
                         <Text size="3xl" bold={true}>Chat with {currentAgent?.name}</Text>
                         <Text className="max-w-sm" size="md">Your personal AI assistant powered by local inference. Send a message to get started.</Text>
 
@@ -196,8 +142,8 @@ export default function ChatPage({
                         rows={1}
                         currentText={inputText}
                         disabled={!isGatewayConnected || isAgentMissing || isNoAgentSelected}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputText(e.target.value)}
-                        onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                        onChange={(e) => setInputText(e.target.value)}
+                        onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
                                 handleSend(e);

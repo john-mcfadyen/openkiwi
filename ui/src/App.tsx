@@ -42,11 +42,11 @@ import IconBox from './components/IconBox'
 import Badge from './components/Badge'
 import Modal from './components/Modal'
 import MarkdownRenderer from './components/MarkdownRenderer'
-import AgentsPage from './components/pages/AgentsPage'
+import AgentsPage from './components/pages/AgentsPage/AgentsPage'
 import ModelsPage from './components/pages/ModelsPage'
 import LogsPage from './components/pages/LogsPage'
 import GatewayPage from './components/pages/GatewayPage'
-import SettingsPage from './components/pages/SettingsPage'
+import SettingsPage from './components/pages/SettingsPage/SettingsPage'
 import ChatPage from './components/pages/ChatPage'
 import ActivityPage from './components/pages/ActivityPage'
 import WorkflowsPage from './components/pages/WorkflowsPage'
@@ -128,7 +128,7 @@ function App() {
     }
   }, [location.pathname, navigate]);
 
-  const [activeSettingsSection, setActiveSettingsSection] = useState<'agents' | 'tools' | 'messaging' | 'about' | 'general' | 'gateway'>('about');
+  const [activeSettingsSection, setActiveSettingsSection] = useState<'agents' | 'tools' | 'messaging' | 'version' | 'config' | 'chat' | 'general' | 'gateway'>('version');
   const [whatsappStatus, setWhatsappStatus] = useState<{ connected: boolean, qrCode: string | null, isInitializing?: boolean }>({ connected: false, qrCode: null, isInitializing: false });
   const [telegramStatus, setTelegramStatus] = useState<{ connected: boolean, isInitializing?: boolean, botUsername?: string | null }>({ connected: false, isInitializing: false, botUsername: null });
   const [isNavExpanded, setIsNavExpanded] = useState(true);
@@ -272,6 +272,20 @@ function App() {
                 ...prev,
                 [msg.agentId]: msg.state
               }));
+            } else if (msg.type === 'system_error') {
+              toast.error(msg.title || 'System Error', {
+                description: msg.message,
+                duration: 10000,
+              });
+              if (msg.sessionId === activeSessionId) {
+                setMessages(prev => [...prev, {
+                  role: 'assistant',
+                  content: msg.message,
+                  timestamp: Math.floor(Date.now() / 1000),
+                  isError: true,
+                  isEphemeral: true
+                }]);
+              }
             }
           } catch (e) { }
         };
@@ -775,7 +789,7 @@ function App() {
     }
   };
 
-  const saveAgentConfig = async () => {
+  const saveAgentConfig = async (formOverride?: any, successMessage?: string, successDescription?: string) => {
     try {
       // Use agentsPageAgentId if on agents page, otherwise use settingsAgentId
       const agentId = activeView === 'agents' ? agentsPageAgentId : settingsAgentId;
@@ -791,11 +805,11 @@ function App() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${gatewayToken}`
         },
-        body: JSON.stringify(agentForm),
+        body: JSON.stringify(formOverride || agentForm),
       });
       if (response.ok) {
-        toast.success('Agent configuration updated!', {
-          description: 'The AI will now recognize its new identity.'
+        toast.success(successMessage || 'Agent configuration updated!', {
+          description: successDescription || 'The AI will now recognize its new identity.'
         });
         fetchAgents();
       }
@@ -943,7 +957,9 @@ function App() {
       const payload = {
         sessionId: sessionToUse,
         agentId: selectedAgentId,
-        messages: newMessages.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+        messages: newMessages
+          .filter(m => !m.isEphemeral)
+          .map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
         shouldSummarize: config?.chat.generateSummaries || false
       };
       setLogs(prev => prev); // Removed local logging
@@ -1024,7 +1040,7 @@ function App() {
         fetchSessions();
       } else if (data.type === 'error') {
         setIsStreaming(false);
-        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${data.message}`, timestamp: aiResponseTimestamp }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: data.message, timestamp: aiResponseTimestamp, isError: true }]);
         socket.close();
       }
     };
@@ -1065,14 +1081,14 @@ function App() {
           hasAgents={agents.length > 0}
           hasModels={(config?.providers?.length ?? 0) > 0}
           hasActiveAgents={hasActiveAgents}
-          onSettingsClick={() => setActiveSettingsSection('about')}
+          onSettingsClick={() => setActiveSettingsSection('version')}
           isProjectManagementEnabled={isProjectManagementEnabled}
           isAgentActivityEnabled={isAgentActivityEnabled}
         />
 
         {/* Secondary Sidebar (Chat Sessions) */}
         {activeView === 'chat' && (
-          <nav className="w-72 bg-bg-sidebar border-r border-border-color flex flex-col z-50 transition-all duration-300">
+          <nav className="w-72 bg-sidebar border-r border-divider flex flex-col z-50 transition-all duration-300">
             <div className="p-5">
               <Button
                 className="w-full"
@@ -1239,7 +1255,7 @@ function App() {
         <div className="flex-1 overflow-y-auto p-8 h-full">
           {viewingFile && (viewingFile.isEditing ? (
             <textarea
-              className="w-full h-[60vh] p-6 bg-bg-primary border border-border-color rounded-2xl outline-none focus:border-accent-primary transition-colors resize-none font-mono text-sm leading-relaxed text-neutral-600 dark:text-white"
+              className="w-full h-[60vh] p-6 bg-surface border border-divider rounded-2xl outline-none focus:border-accent-primary transition-colors resize-none font-mono text-sm leading-relaxed text-neutral-600 dark:text-white"
               value={viewingFile.content}
               onChange={e => setViewingFile({ ...viewingFile, content: e.target.value })}
             />
@@ -1249,7 +1265,7 @@ function App() {
         </div>
       </Modal>
 
-      {/* Update Modals have been moved to the ABOUT page */}
+      {/* Update Modals have been moved to the VERSION section */}
     </div>
   )
 }

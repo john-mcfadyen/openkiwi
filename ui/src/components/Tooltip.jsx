@@ -1,20 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-interface TooltipProps {
-    content: React.ReactNode;
-    children: React.ReactNode;
-    title?: string;
-    className?: string;
-    position?: 'top' | 'bottom' | 'left' | 'right';
-}
-
-export const Tooltip = ({ content, children, title, className = '', position = 'top' }: TooltipProps) => {
+export const Tooltip = ({ content, children, title, className = '', position = 'top' }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0 });
-    const triggerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<number | null>(null);
+    const triggerRef = useRef(null);
+    const timeoutRef = useRef(null);
 
     const updatePosition = () => {
         if (!triggerRef.current) return;

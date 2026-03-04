@@ -20,8 +20,8 @@ const IconBox: React.FC<IconBoxProps> = ({
     };
 
     const variantClasses = {
-        primary: 'bg-bg-primary text-neutral-600 dark:text-white',
-        secondary: 'bg-bg-card text-neutral-600 dark:text-white',
+        primary: 'bg-surface text-neutral-600 dark:text-white',
+        secondary: 'bg-card text-neutral-600 dark:text-white',
         accent: 'bg-accent-primary/10 text-accent-primary',
         transparent: 'bg-white-trans text-neutral-600 dark:text-white'
     };

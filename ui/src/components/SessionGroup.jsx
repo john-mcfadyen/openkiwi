@@ -1,19 +1,9 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
-import { Session, Agent } from '../types';
 import SessionButton from './SessionButton';
 import Text from './Text';
 
-interface SessionGroupProps {
-    agent: Agent;
-    sessions: Session[];
-    activeSessionId: string | null;
-    onLoadSession: (session: Session) => void;
-    onDeleteSession: (id: string, e: React.MouseEvent) => void;
-    formatTimestamp: (timestamp?: number) => string;
-}
-
-export const SessionGroup: React.FC<SessionGroupProps> = ({
+export const SessionGroup = ({
     agent,
     sessions,
     activeSessionId,

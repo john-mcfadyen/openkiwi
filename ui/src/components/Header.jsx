@@ -11,20 +11,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Badge from './Badge';
 import Button from './Button';
 
-interface HeaderProps {
-    isGatewayConnected: boolean;
-    onMenuClick?: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ isGatewayConnected, onMenuClick }) => {
+const Header = ({ isGatewayConnected, onMenuClick }) => {
     const { theme } = useTheme();
     return (
-        <header className="h-14 border-b border-border-color bg-white dark:bg-bg-primary flex items-center justify-between px-6 z-[60] shadow-sm">
+        <header className="h-14 border-b border-divider bg-white dark:bg-surface flex items-center justify-between px-6 z-[60] shadow-sm">
             <div className="flex items-center gap-4">
                 {onMenuClick && (
                     <button
                         onClick={onMenuClick}
-                        className="p-2 -ml-2 rounded-lg text-neutral-500 hover:text-accent-primary hover:bg-white-trans transition-all duration-100"
+                        className="p-2 -ml-2 rounded-lg text-primary hover:text-accent-primary hover:bg-white-trans transition-all duration-100"
                         title="Toggle Navigation"
                     >
                         <Menu size={20} />
@@ -34,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ isGatewayConnected, onMenuClick }) => {
                     <div className="w-8 h-8 rounded-lg bg-accent-primary flex items-center justify-center">
                         <FontAwesomeIcon icon={faBrain} className="text-white dark:text-neutral-600" />
                     </div>
-                    <h1 className="text-lg font-bold tracking-tight text-neutral-600 dark:text-white">
+                    <h1 className="text-lg font-bold tracking-tight text-primary">
                         <Text bold={true} size="lg">OpenKIWI</Text>
                         <Badge className="ml-2 uppercase" size="xs">beta</Badge>
                     </h1>

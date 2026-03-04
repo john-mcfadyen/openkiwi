@@ -12,13 +12,13 @@ export default {
         extend: {
             colors: {
                 'accent-primary': 'var(--accent-primary)',
-                'bg-sidebar': 'var(--bg-sidebar)',
-                'bg-primary': 'var(--bg-primary)',
-                'bg-card': 'var(--bg-card)',
-                'bg-modal': 'var(--modal-bg)',
-                'text-primary': 'var(--text-primary)',
-                'text-secondary': 'var(--text-secondary)',
-                'border-color': 'var(--border-color)',
+                'sidebar': 'var(--bg-sidebar)',
+                'surface': 'var(--bg-primary)',
+                'card': 'var(--bg-card)',
+                'modal': 'var(--modal-bg)',
+                'primary': 'var(--text-primary)',
+                'secondary': 'var(--text-secondary)',
+                'divider': 'var(--border-color)',
             },
             keyframes: {
                 'fade-in': {

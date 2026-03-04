@@ -21,13 +21,14 @@ export default function ThemeSelector() {
 
     return (
         <Text>
-            <div className="inline-flex bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-full border border-border-color shadow-sm w-fit">
+            <div className="inline-flex bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-full border border-divider shadow-sm w-fit">
                 {options.map((option) => (
                     <Button
                         key={option.id}
                         themed={theme === option.id}
                         onClick={() => setTheme(option.id)}
-                        className={`ml-0.5 mr-0.5 !py-1 !px-3 !rounded-full transition-all duration-300 flex items-center justify-center
+                        size="sm"
+                        className={`ml-0.5 mr-0.5 !h-8 !py-1 !px-3 !rounded-full transition-all duration-300 flex items-center justify-center
                             ${theme === option.id
                                 ? `shadow-sm !text-white dark:!text-neutral-600`
                                 : '!bg-transparent'}`}

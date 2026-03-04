@@ -14,20 +14,18 @@ import {
     faFolder
 } from '@fortawesome/free-solid-svg-icons';
 
-interface SidebarProps {
-    isNavExpanded: boolean;
-    activeView: string;
-    createNewSession: () => void;
-    isGatewayConnected: boolean;
-    hasAgents: boolean;
-    hasModels: boolean;
-    hasActiveAgents: boolean;
-    onSettingsClick?: () => void;
-    isProjectManagementEnabled?: boolean;
-    isAgentActivityEnabled?: boolean;
-}
-
-export default function Sidebar({ isNavExpanded, activeView, createNewSession, isGatewayConnected, hasAgents, hasModels, hasActiveAgents, onSettingsClick, isProjectManagementEnabled, isAgentActivityEnabled }: SidebarProps) {
+export default function Sidebar({
+    isNavExpanded,
+    activeView,
+    createNewSession,
+    isGatewayConnected,
+    hasAgents,
+    hasModels,
+    hasActiveAgents,
+    onSettingsClick,
+    isProjectManagementEnabled,
+    isAgentActivityEnabled
+}) {
     const navigate = useNavigate();
     const { theme } = useTheme();
 
@@ -43,16 +41,16 @@ export default function Sidebar({ isNavExpanded, activeView, createNewSession, i
         { id: 'models', icon: faCube, label: 'Models', showAlert: !hasModels },
         { id: 'logs', icon: faFileLines, label: 'Logs' },
         { id: 'settings', icon: faGear, label: 'Settings' },
-    ].filter((item: any) => {
+    ].filter((item) => {
         if (item.experimentalProjectManagement && !isProjectManagementEnabled) return false;
         if (item.experimentalActivity && !isAgentActivityEnabled) return false;
         return true;
     });
 
     return (
-        <nav className={`${isNavExpanded ? 'w-44' : 'w-16'} bg-bg-sidebar flex flex-col items-center py-6 gap-2 z-51 transition-all duration-300`}>
-            {navItems.map((item) => (
-                <>
+        <nav className={`${isNavExpanded ? 'w-44' : 'w-16'} bg-sidebar flex flex-col items-center py-6 gap-2 z-51 transition-all duration-300`}>
+            {navItems.map((item, idx) => (
+                <React.Fragment key={idx}>
                     {
                         item.id ?
 
@@ -65,7 +63,7 @@ export default function Sidebar({ isNavExpanded, activeView, createNewSession, i
                                 }}
                                 className={`w-[calc(100%-1rem)] mx-2 px-3 py-3 rounded-xl transition-all duration-50 group relative flex items-center gap-4 ${activeView === item.id
                                     ? `bg-accent-primary text-white dark:text-neutral-600 shadow-lg shadow-accent-primary/20`
-                                    : 'text-neutral-600 hover:bg-neutral-200 dark:hover:bg-neutral-800 dark:text-white'
+                                    : 'text-primary hover:bg-neutral-200 dark:hover:bg-neutral-800'
                                     }`}
                                 title={isNavExpanded ? undefined : item.label}
                             >
@@ -106,7 +104,7 @@ export default function Sidebar({ isNavExpanded, activeView, createNewSession, i
 
                             <div className="h-px bg-border-color m-3 pl-10 pr-10" />
                     }
-                </>
+                </React.Fragment>
             ))}
         </nav>
     );

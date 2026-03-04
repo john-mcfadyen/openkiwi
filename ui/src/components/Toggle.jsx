@@ -1,29 +1,26 @@
-import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip } from "./Tooltip";
 
-interface ToggleProps {
-    checked: boolean;
-    onChange: () => void;
-    label?: string;
-    disabled?: boolean;
-    title?: string;
-    className?: string;
-    children?: React.ReactNode;
-}
-
-export default function Toggle(props: ToggleProps) {
+export default function Toggle({
+    checked,
+    onChange,
+    label,
+    disabled = false,
+    title,
+    className = '',
+    children
+}) {
     const toggleContent = (
-        <div className={`relative inline-block ${props.className || ''}`}>
-            <label className={`relative inline-flex items-center ${props.disabled ? 'cursor-not-allowed' : 'cursor-pointer'} z-0`}>
-                <div className={`flex items-center ${props.disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className={`relative inline-block ${className}`}>
+            <label className={`relative inline-flex items-center ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} z-0`}>
+                <div className={`flex items-center ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
                     <input
                         type="checkbox"
                         className="sr-only peer"
-                        checked={props.checked}
-                        onChange={props.onChange}
-                        disabled={props.disabled}
+                        checked={checked}
+                        onChange={onChange}
+                        disabled={disabled}
                     />
 
                     {/* check icon */}
@@ -50,22 +47,22 @@ export default function Toggle(props: ToggleProps) {
                     `} />
 
                     <span className="ml-3 text-md font-medium">
-                        {props.label}
-                        {props.children}
+                        {label}
+                        {children}
                     </span>
                 </div>
             </label>
 
             {/* Overlay to handle cursor when disabled */}
-            {props.disabled && (
+            {disabled && (
                 <div className="absolute inset-0 z-10 cursor-not-allowed" />
             )}
         </div>
     );
 
-    if (props.title) {
+    if (title) {
         return (
-            <Tooltip content={props.title} className="inline-block">
+            <Tooltip content={title} className="inline-block">
                 {toggleContent}
             </Tooltip>
         );
@@ -73,3 +70,5 @@ export default function Toggle(props: ToggleProps) {
 
     return toggleContent;
 }
+
+Toggle.displayName = 'Toggle';

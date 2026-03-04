@@ -26,7 +26,7 @@ export default {
                 services: {
                     type: 'array',
                     items: { type: 'string' },
-                    description: 'For parse_bulletin: List of services to filter for (e.g. ["GitLab", "Jira"]). If provided, only matches will be returned.'
+                    description: 'For parse_bulletin: List of services to filter for (e.g. ["GitLab", "Jira"]). If provided, only matches will be returned. TIP: Check cisa/managed_services.json in the workspace first for the list of relevant services.'
                 }
             },
             required: ['action']

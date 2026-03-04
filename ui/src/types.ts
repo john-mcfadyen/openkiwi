@@ -3,6 +3,8 @@ export interface Message {
     role: 'user' | 'assistant' | 'reasoning' | 'system' | 'tool';
     content: string;
     timestamp?: number;
+    isError?: boolean;
+    isEphemeral?: boolean;
     name?: string; // used for tool
     tool_calls?: {
         id?: string;

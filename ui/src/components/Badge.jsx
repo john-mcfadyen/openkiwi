@@ -1,15 +1,6 @@
-import React from 'react';
 import Text from './Text';
 
-interface BadgeProps {
-    children: React.ReactNode;
-    className?: string;
-    variant?: 'default' | 'outline' | 'accent' | 'danger' | 'success';
-    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
-    bold?: boolean;
-}
-
-const Badge: React.FC<BadgeProps> = ({
+const Badge = ({
     children,
     className = '',
     variant = 'default',
@@ -34,5 +25,7 @@ const Badge: React.FC<BadgeProps> = ({
         </Text>
     );
 };
+
+Badge.displayName = 'Badge';
 
 export default Badge;

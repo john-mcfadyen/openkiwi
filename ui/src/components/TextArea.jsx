@@ -2,16 +2,7 @@ import React, { useContext, forwardRef } from "react";
 import { ThemeContext } from "../contexts/ThemeContext";
 import Text from "./Text";
 
-interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-    id?: string;
-    label?: React.ReactNode;
-    currentText?: string;
-    textAreaClassName?: string;
-    containerClassName?: string;
-    width?: string;
-}
-
-const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
+const TextArea = forwardRef(({
     id,
     label,
     currentText,
@@ -25,12 +16,13 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
     readOnly,
     disabled,
     value,
+    code = false,
     ...rest
 }, ref) => {
     const context = useContext(ThemeContext);
     const getThemeInputClasses = context?.getThemeInputClasses || (() => "");
 
-    const defaultTextAreaClasses = "border-2 p-4 rounded-2xl bg-white dark:bg-bg-primary border-neutral-100 dark:border-neutral-700 hover:border-neutral-200 dark:hover:border-neutral-600 text-neutral-900 dark:text-neutral-100";
+    const defaultTextAreaClasses = "border-2 p-4 rounded-2xl border-neutral-100 dark:border-neutral-700 hover:border-neutral-200 dark:hover:border-neutral-600 text-primary";
 
     return (
         <div className={`${width != null ? width : "w-full"} ${containerClassName || ""}`}>
@@ -50,10 +42,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
                     rows={rows}
                     readOnly={readOnly}
                     disabled={disabled}
+                    style={{ backgroundColor: 'var(--textarea-bg)' }}
                     className={`${defaultTextAreaClasses}
                         transition-colors w-full resize-none
                         placeholder-neutral-300 dark:placeholder-neutral-500
                         ${getThemeInputClasses()}
+                        ${code ? 'font-mono' : ''}
                         ${className || ""} ${textAreaClassName || ""}`}
                     value={value !== undefined ? value : currentText}
                     onChange={onChange || (() => { })}

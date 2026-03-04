@@ -1,24 +1,19 @@
 import React from 'react'
 import Text from './Text'
 
-export type TableAlignment = 'left' | 'center' | 'right';
-
-export interface HeaderObject {
-    name: string;
-    alignment?: TableAlignment;
-}
-
-export type HeaderItem = string | HeaderObject;
-
-export function TABLE(props: { header?: HeaderItem[], children: React.ReactNode, className?: string, center?: boolean }) {
+export function TABLE(props) {
+    const { header, children, className, center } = props;
     return (
-        <table className={(props.className || "") + " w-full text-left border-separate border-spacing-0 rounded-xl overflow-hidden"}>
-            {props.header != null && (
+        <table
+            className={(className || "") + " w-full text-left rounded-xl overflow-hidden"}
+            style={{ border: '1px solid var(--table-border-color)' }}
+        >
+            {header != null && (
                 <thead style={{ backgroundColor: 'var(--table-header-bg)' }}>
                     <tr>
-                        {props.header.map((item, idx) => {
+                        {header.map((item, idx) => {
                             const name = typeof item === 'string' ? item : item.name;
-                            let alignment: TableAlignment = props.center ? 'center' : 'left';
+                            let alignment = center ? 'center' : 'left';
 
                             if (typeof item !== 'string') {
                                 alignment = item.alignment || 'center';
@@ -34,13 +29,13 @@ export function TABLE(props: { header?: HeaderItem[], children: React.ReactNode,
                 </thead>
             )}
             <tbody style={{ backgroundColor: 'var(--table-body-bg)' }}>
-                {props.children}
+                {children}
             </tbody>
         </table>
     )
 }
 
-export function TH({ children, alignment = 'left' }: { children: React.ReactNode, alignment?: TableAlignment }) {
+export function TH({ children, alignment = 'left' }) {
     const alignmentClass = alignment === 'center' ? 'text-center' : alignment === 'right' ? 'text-right' : 'text-left';
     return (
         <th className={`py-4 px-6 text-xs uppercase tracking-wider ${alignmentClass}`}>
@@ -51,7 +46,7 @@ export function TH({ children, alignment = 'left' }: { children: React.ReactNode
     )
 }
 
-export function TR({ className, onClick, children, highlight = false }: { className?: string, onClick?: () => void, children: React.ReactNode, highlight?: boolean }) {
+export function TR({ className, onClick, children, highlight = false }) {
     return (
         <tr
             className={`${className || ""} cursor-pointer transition-colors group ${highlight ? 'hover:bg-black/10 dark:hover:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
@@ -62,9 +57,13 @@ export function TR({ className, onClick, children, highlight = false }: { classN
     )
 }
 
-export function TD({ children, className, colSpan }: { children: React.ReactNode, className?: string, colSpan?: number }) {
+export function TD({ children, className, colSpan }) {
     return (
-        <td colSpan={colSpan} className={`${className || ""} py-4 px-6 text-sm border-t border-border-color`}>
+        <td
+            colSpan={colSpan}
+            className={`${className || ""} py-4 px-6 text-sm`}
+            style={{ borderTop: '1px solid var(--table-border-color)' }}
+        >
             {children}
         </td>
     )

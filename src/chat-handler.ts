@@ -332,7 +332,19 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                             // For now, the next time they fetch sessions it will be there.
                         }
                     } catch (err) {
-                        console.error('[Summary] Failed to generate summary:', err);
+                        const errorMessage = err instanceof Error ? err.message : String(err);
+                        console.error('[Summary] Failed to generate summary:', errorMessage);
+
+                        // Notify UI via broadcast (presence socket)
+                        import('./state.js').then(({ broadcastMessage }) => {
+                            broadcastMessage({
+                                type: 'system_error',
+                                title: 'Summary Generation Failed',
+                                message: errorMessage,
+                                sessionId: sessionId,
+                                agentId: effectiveAgentId
+                            });
+                        });
                     }
                 })();
             }

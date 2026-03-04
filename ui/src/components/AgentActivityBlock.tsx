@@ -19,7 +19,7 @@ const AgentActivityBlock: React.FC<AgentActivityBlockProps> = ({ agent, state })
     const isIdle = state.status === 'idle';
 
     return (
-        <div className={`bg-bg-primary rounded-2xl flex items-center transition-all ${isIdle ? 'w-fit p-2 gap-4' : 'w-full p-6 justify-between'}`}>
+        <div className={`bg-surface rounded-2xl flex items-center transition-all ${isIdle ? 'w-fit p-2 gap-4' : 'w-full p-6 justify-between'}`}>
 
 
             <div className="">

@@ -24,18 +24,44 @@
 /* Light Mode Variables */
 .light,
 :root:not(.dark) {
-  --accent-primary: rgb(43, 43, 43);
-  --bg-sidebar: #fafafa;
-  --bg-primary: #fafafa;
-  --bg-card: #fafafa;
-  --text-primary: rgb(38, 38, 38);
-  --text-secondary: #78df0a;
-  --border-color: #e5e5e5;
-  --user-chat-bubble-bg: rgb(43, 43, 43);
-  --modal-bg: #ffffff;
+  /* Theme Color */
+  --accent-primary: rgb(95, 95, 95);
+
+  /* Borders */
+  --border-color: rgb(232, 232, 232);
+
+  /* Chat Bubbles */
+  --user-chat-bubble-bg: rgb(64, 67, 74);
+  --agent-chat-bubble-bg: rgb(255, 255, 255);
+
+  /* Page */
+  --bg-primary: rgb(242, 242, 242);
+  --bg-sidebar: rgb(242, 242, 242);
+
+  /* Text */
+  --text-primary: rgb(95, 95, 95);
+  --text-secondary: rgb(128, 128, 128);
+
+  /* Input */
+  --input-bg: #fafafa;
+
+  /* Select */
+  --select-bg: #fafafa;
+
+  /* TextArea */
+  --textarea-bg: #fafafa;
+
+  /* Table */
   --table-header-bg: rgb(65, 65, 65);
   --table-header-text: white;
-  --table-body-bg: #ffffff;
+  --table-body-bg: #fafafa;
+  --table-border-color: rgb(232, 232, 232);
+
+  /* Modal */
+  --modal-bg: white;
+
+  /* Card */
+  --bg-card: white;
 }
 
 /* Dark Mode Variables */
@@ -57,16 +83,21 @@
   --text-secondary: #a3a3a3;
   --border-color: #383838;
   --user-chat-bubble-bg: rgb(56, 59, 61);
+  --agent-chat-bubble-bg: rgb(38, 38, 38);
   --modal-bg: rgb(26, 26, 26);
   --table-header-bg: rgb(26, 26, 26);
   /* --table-header-text: rgb(23, 23, 23); */
   --table-header-text: white;
   --table-body-bg: rgb(30, 30, 30);
+  --input-bg: rgb(26, 26, 26);
+  --select-bg: rgb(26, 26, 26);
+  --textarea-bg: rgb(26, 26, 26);
+  --table-border-color: #383838;
 }
 
 @layer base {
   body {
-    @apply bg-bg-primary overflow-hidden antialiased;
+    @apply bg-surface text-primary overflow-hidden antialiased;
     font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   }
 }
@@ -93,7 +124,8 @@
   }
 
   .ai-bubble {
-    @apply bg-neutral-100 dark:bg-neutral-50/5 rounded-tl-[8px];
+    background-color: var(--agent-chat-bubble-bg);
+    @apply rounded-tl-[8px];
     /* box-shadow: 0 4px 15px rgba(43, 43, 43, 0.2); */
   }
 
@@ -115,9 +147,9 @@
     /* box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); */
   }
 
-  /* Loading dots */
   .loading-dots {
-    @apply flex gap-1.5 p-3 px-5 bg-neutral-100 dark:bg-neutral-50/5 rounded-3xl rounded-tl-[8px] mt-0 w-max shadow-sm;
+    background-color: var(--agent-chat-bubble-bg);
+    @apply flex gap-1.5 p-3 px-5 rounded-3xl rounded-tl-[8px] mt-0 w-max shadow-sm;
   }
 
   .dot {
@@ -144,21 +176,21 @@
 
 /* Markdown adjustments for Light Mode */
 .light .prose {
-  --tw-prose-body: #404040;
+  --tw-prose-body: var(--text-primary);
   /* neutral-700 */
-  --tw-prose-headings: #171717;
+  --tw-prose-headings: var(--text-primary);
   /* neutral-900 */
   --tw-prose-links: #008cff;
-  --tw-prose-bold: #171717;
-  --tw-prose-counters: #737373;
+  --tw-prose-bold: var(--text-primary);
+  --tw-prose-counters: var(--text-secondary);
   /* neutral-500 */
-  --tw-prose-bullets: #d4d4d4;
+  --tw-prose-bullets: var(--text-secondary);
   /* neutral-300 */
-  --tw-prose-hr: #e5e5e5;
+  --tw-prose-hr: var(--border-color);
   /* neutral-200 */
-  --tw-prose-quotes: #171717;
-  --tw-prose-quote-borders: #e5e5e5;
-  --tw-prose-captions: #737373;
+  --tw-prose-quotes: var(--text-primary);
+  --tw-prose-quote-borders: var(--border-color);
+  --tw-prose-captions: var(--text-secondary);
   --tw-prose-code: #171717;
   --tw-prose-pre-code: #e5e5e5;
   --tw-prose-pre-bg: #262626;
@@ -168,21 +200,21 @@
 }
 
 .dark .prose {
-  --tw-prose-body: #ffffff;
-  --tw-prose-headings: #ffffff;
+  --tw-prose-body: var(--text-primary);
+  --tw-prose-headings: var(--text-primary);
   --tw-prose-links: #008cff;
-  --tw-prose-bold: #ffffff;
-  --tw-prose-counters: #ffffff;
-  --tw-prose-bullets: #ffffff;
-  --tw-prose-hr: #ffffff;
-  --tw-prose-quotes: #ffffff;
-  --tw-prose-quote-borders: #ffffff;
-  --tw-prose-captions: #ffffff;
-  --tw-prose-code: #ffffff;
-  --tw-prose-pre-code: #ffffff;
-  --tw-prose-pre-bg: #ffffff;
-  --tw-prose-th-borders: #ffffff;
-  --tw-prose-td-borders: #ffffff;
+  --tw-prose-bold: var(--text-primary);
+  --tw-prose-counters: var(--text-primary);
+  --tw-prose-bullets: var(--text-primary);
+  --tw-prose-hr: var(--text-primary);
+  --tw-prose-quotes: var(--text-primary);
+  --tw-prose-quote-borders: var(--text-primary);
+  --tw-prose-captions: var(--text-primary);
+  --tw-prose-code: var(--text-primary);
+  --tw-prose-pre-code: var(--text-primary);
+  --tw-prose-pre-bg: var(--text-primary);
+  --tw-prose-th-borders: var(--text-primary);
+  --tw-prose-td-borders: var(--text-primary);
 }
 
 /* Condensed Prose for Chat */
@@ -235,7 +267,7 @@
 .prose-chat h4,
 .prose-chat h5,
 .prose-chat h6 {
-  @apply font-bold text-text-primary mt-6 mb-2 first:mt-0 tracking-tight;
+  @apply font-bold text-primary mt-6 mb-2 first:mt-0 tracking-tight;
 }
 
 .prose-chat h1 {
@@ -256,15 +288,15 @@
 
 .prose-chat strong,
 .prose-chat b {
-  @apply font-bold text-text-primary;
+  @apply font-bold text-primary;
 }
 
 .prose-chat hr {
-  @apply my-6 border-border-color;
+  @apply my-6 border-divider;
 }
 
 .prose-chat blockquote {
-  @apply pl-4 border-l-2 border-neutral-300 dark:border-neutral-700 italic text-text-secondary my-4;
+  @apply pl-4 border-l-2 border-neutral-300 dark:border-neutral-700 italic text-secondary my-4;
 }
 
 /* Remove default backticks from prose inline code */

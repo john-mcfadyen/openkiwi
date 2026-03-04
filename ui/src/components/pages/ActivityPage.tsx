@@ -39,7 +39,7 @@ const AgentActivityRow: React.FC<{ agent: Agent, state: AgentState }> = ({ agent
     const duration = Date.now() - (state.since || Date.now());
 
     return (
-        <div className={`grid grid-cols-12 items-center ${isIdle ? 'bg-bg-primary/20' : 'bg-emerald-500/10 border-l-4 border-l-emerald-500'} hover:bg-bg-primary/40 border border-white/5 rounded-xl p-4 transition-all group`}>
+        <div className={`grid grid-cols-12 items-center ${isIdle ? 'bg-surface/20' : 'bg-emerald-500/10 border-l-4 border-l-emerald-500'} hover:bg-surface/40 border border-white/5 rounded-xl p-4 transition-all group`}>
 
             <div className="col-span-4 flex items-center gap-4">
                 <div className={`w-10 h-10 ${isIdle ? 'bg-neutral-500/10 grayscale' : 'bg-emerald-500/10'} rounded-full flex items-center justify-center text-xl transition-all`}>
@@ -123,7 +123,7 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ agents, agentStates }) => {
                             />
                         ))}
                         {idleAgents.length === 0 && activeAgents.length === 0 && (
-                            <div className="p-12 text-center bg-bg-primary/10 rounded-2xl border border-dashed border-white/10">
+                            <div className="p-12 text-center bg-surface/10 rounded-2xl border border-dashed border-white/10">
                                 <Text secondary>No agents found. Create one in the Agents tab.</Text>
                             </div>
                         )}

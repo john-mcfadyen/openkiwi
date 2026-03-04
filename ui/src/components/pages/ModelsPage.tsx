@@ -8,7 +8,6 @@ import Button from '../Button'
 import Modal from '../Modal'
 import Card from '../Card'
 import Text from '../Text'
-import Select from '../Select'
 import Page from './Page'
 import ModelsTable from '../ModelsTable'
 import Input from '../Input'
@@ -20,7 +19,10 @@ import LMStudioIcon from '../../img/lmstudio.png'
 import OpenRouterIcon from '../../img/openrouter.png'
 import OllamaIcon from '../../img/ollama.png'
 import LemonadeIcon from '../../img/lemonade.png'
-
+import SectionHeader from '../SectionHeader'
+import Row from '../Row'
+import Column from '../Column'
+import Code from '../Code'
 
 interface ModelsPageProps {
     config: Config | null;
@@ -30,6 +32,15 @@ interface ModelsPageProps {
     fetchModels: (isSilent?: boolean, configOverride?: { endpoint: string, apiKey?: string }, skipSetState?: boolean) => Promise<boolean | string[] | Model[] | void>;
     agents: Agent[];
 }
+
+const ProviderButton = ({ isSelected, onClick, icon, alt, className = "" }: { isSelected: boolean; onClick: () => void; icon: any; alt: string; className?: string }) => (
+    <Button
+        className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${isSelected ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-divider bg-card hover:bg-surface text-neutral-500'}`}
+        onClick={onClick}
+    >
+        <img src={icon} alt={alt} className={`h-8 ${className}`} />
+    </Button>
+);
 
 export default function ModelsPage({
     config,
@@ -78,6 +89,10 @@ export default function ModelsPage({
             setScannedModels([]);
         }
     }, [isModalOpen]);
+
+    useEffect(() => {
+        setScannedModels([]);
+    }, [selectedProviderType]);
 
     const handleRowClick = (idx: number) => {
         if (!config || !config.providers[idx]) return;
@@ -413,132 +428,147 @@ export default function ModelsPage({
                 <Button themed={true} icon={faPlus} onClick={() => setIsModalOpen(true)}>Add Model</Button>
             }
         >
-            <Card>
-                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 max-w-6xl">
-                    {augmentedProviders.length === 0 ? (
-                        <ModelsTable providers={[]} onRowClick={() => { }} agents={agents} />
-                    ) : (
-                        <div className="space-y-12">
-                            {anthropicModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>Anthropic</Text>
+            <>
+                {augmentedProviders.length === 0 ? (
+                    <ModelsTable providers={[]} onRowClick={() => { }} agents={agents} />
+                ) : (
+                    <>
+                        {anthropicModels.length > 0 && (
+                            <>
+                                <SectionHeader title="Anthropic" icon={AnthropicIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={anthropicModels}
                                         onRowClick={(i) => handleRowClick(anthropicModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(anthropicModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {googleModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>Google</Text>
+                        {googleModels.length > 0 && (
+                            <>
+                                <SectionHeader title="Google" icon={GoogleIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={googleModels}
                                         onRowClick={(i) => handleRowClick(googleModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(googleModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {lemonadeModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>Lemonade</Text>
+                        {lemonadeModels.length > 0 && (
+                            <>
+                                <SectionHeader title="Lemonade" icon={LemonadeIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={lemonadeModels}
                                         onRowClick={(i) => handleRowClick(lemonadeModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(lemonadeModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {ollamaModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>Ollama</Text>
+                        {ollamaModels.length > 0 && (
+                            <>
+                                <SectionHeader title="Ollama" icon={OllamaIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={ollamaModels}
                                         onRowClick={(i) => handleRowClick(ollamaModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(ollamaModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {lmStudioModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>LM Studio</Text>
+                        {lmStudioModels.length > 0 && (
+                            <>
+                                <SectionHeader title="LM Studio" icon={LMStudioIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={lmStudioModels}
                                         onRowClick={(i) => handleRowClick(lmStudioModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(lmStudioModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {openAIModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>OpenAI</Text>
+                        {openAIModels.length > 0 && (
+                            <>
+                                <SectionHeader title="OpenAI" icon={OpenAIIcon} />
+                                <Card>
                                     <ModelsTable
                                         providers={openAIModels}
                                         onRowClick={(i) => handleRowClick(openAIModels[i].originalIndex)}
                                         onDelete={(i) => handleDeleteProvider(openAIModels[i].originalIndex)}
                                         agents={agents}
                                     />
-                                </div>
-                            )}
+                                </Card>
+                            </>
+                        )}
 
-                            {openRouterModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <Text size="lg" bold={true}>OpenRouter</Text>
-                                    <div className="bg-bg-primary/50 border border-border-color rounded-2xl p-6 flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-white dark:bg-neutral-800 rounded-xl flex items-center justify-center border border-border-color">
-                                                <img src={OpenRouterIcon} className="h-7 dark:invert" alt="OpenRouter" />
-                                            </div>
-                                            <div>
-                                                <div><Text bold={true}>OpenRouter is active</Text></div>
-                                                <div><Text size="sm" secondary={true}>You can now use OpenRouter models with your agents.</Text></div>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
+                        {openRouterModels.length > 0 && (
+                            <>
+                                <SectionHeader title="OpenRouter" icon={OpenRouterIcon} />
+                                <Card>
+                                    <Row>
+                                        <Column grow={true}>
+                                            <Text bold={true}>OpenRouter is active</Text>
+                                            <Text size="sm" secondary={true}>You can now use OpenRouter models with your agents.</Text>
+                                        </Column>
+                                        <Column>
                                             <Button size="sm" themed={false} className="!text-rose-500 hover:!bg-rose-500/10" onClick={() => handleDeleteProvider(openRouterModels[0].originalIndex)}>Remove</Button>
+                                        </Column>
+                                    </Row>
+                                    {/* <div className="flex items-center gap-4">
+                                        <img src={OpenRouterIcon} className="h-7 dark:invert" alt="OpenRouter" />
+                                        <div>
+                                            <div></div>
+                                            <div></div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                    <div className="flex gap-2">
+                                    </div> */}
+                                </Card>
+                            </>
+                        )}
 
-                            {otherModels.length > 0 && (
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold px-1">Other</h3>
-                                    <ModelsTable
-                                        providers={otherModels}
-                                        onRowClick={(i) => handleRowClick(otherModels[i].originalIndex)}
-                                        onDelete={(i) => handleDeleteProvider(otherModels[i].originalIndex)}
-                                        agents={agents}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        {/* {otherModels.length > 0 && (
+                            <>
+                                <h3 className="text-lg font-semibold px-1">Other</h3>
+                                <ModelsTable
+                                    providers={otherModels}
+                                    onRowClick={(i) => handleRowClick(otherModels[i].originalIndex)}
+                                    onDelete={(i) => handleDeleteProvider(otherModels[i].originalIndex)}
+                                    agents={agents}
+                                />
+                            </>
+                        )} */}
+                    </>
+                )}
+            </>
 
-            </Card>
             <Modal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
                 title="Edit Model"
-                className="max-w-xl"
             >
-                <div className="p-6 space-y-6">
-                    <div className="mb-2">
-                        <Text secondary={true} size="xs" bold={true} className="uppercase tracking-widest mb-1 block">Model Name</Text>
-                        <Text size="lg" bold={true}>{editForm.model}</Text>
-                    </div>
-
+                <Page>
+                    {/* <SectionHeader title="Model Name" icon={faTag} /> */}
+                    <Column>
+                        <Text>Model Name</Text>
+                        <Text bold={true}><Code>{editForm.model}</Code></Text>
+                    </Column>
                     <Input
                         label="Description"
                         icon={faTag}
@@ -546,18 +576,12 @@ export default function ModelsPage({
                         onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Enter a description for this model"
                     />
-
-                    <div className="pt-2">
-                        <Button
-                            themed={true}
-                            className="w-full h-12 text-white"
-                            onClick={handleUpdateProvider}
-                            icon={faSave}
-                        >
-                            Update Model
-                        </Button>
-                    </div>
-                </div>
+                    <Button
+                        themed={true}
+                        onClick={handleUpdateProvider}
+                        icon={faSave}
+                    >Update Model</Button>
+                </Page>
             </Modal>
 
             <Modal
@@ -566,297 +590,287 @@ export default function ModelsPage({
                 title="Add New Model"
                 className="max-w-2xl"
             >
+                {/* PROVIDER BUTTONS */}
                 <div className="p-6">
                     <div className="flex gap-4 justify-center mb-6 overflow-x-auto">
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'anthropic' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'anthropic'}
                             onClick={() => setSelectedProviderType('anthropic')}
-                        >
-                            <img src={AnthropicIcon} alt="Anthropic" className="h-8 dark:invert" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'google-gemini' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={AnthropicIcon}
+                            alt="Anthropic"
+                            className="dark:invert"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'google-gemini'}
                             onClick={() => setSelectedProviderType('google-gemini')}
-                        >
-                            <img src={GoogleIcon} alt="Google Gemini" className="h-8" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'lemonade' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={GoogleIcon}
+                            alt="Google Gemini"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'lemonade'}
                             onClick={() => setSelectedProviderType('lemonade')}
-                        >
-                            <img src={LemonadeIcon} alt="Lemonade" className="h-8" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'lm-studio' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={LemonadeIcon}
+                            alt="Lemonade"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'lm-studio'}
                             onClick={() => setSelectedProviderType('lm-studio')}
-                        >
-                            <img src={LMStudioIcon} alt="LM Studio" className="h-8" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'ollama' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={LMStudioIcon}
+                            alt="LM Studio"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'ollama'}
                             onClick={() => setSelectedProviderType('ollama')}
-                        >
-                            <img src={OllamaIcon} alt="Ollama" className="h-8 dark:invert" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'openai' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={OllamaIcon}
+                            alt="Ollama"
+                            className="dark:invert"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'openai'}
                             onClick={() => setSelectedProviderType('openai')}
-                        >
-                            <img src={OpenAIIcon} alt="OpenAI" className="h-8 dark:invert" />
-                        </Button>
-                        <Button
-                            className={`h-16 flex-1 min-w-[60px] text-lg font-bold border-2 transition-all ${selectedProviderType === 'openrouter' ? 'border-accent-primary bg-accent-primary/10 text-accent-primary' : 'border-border-color bg-bg-card hover:bg-bg-primary text-neutral-500'}`}
+                            icon={OpenAIIcon}
+                            alt="OpenAI"
+                            className="dark:invert"
+                        />
+                        <ProviderButton
+                            isSelected={selectedProviderType === 'openrouter'}
                             onClick={() => setSelectedProviderType('openrouter')}
-                        >
-                            <img src={OpenRouterIcon} alt="OpenRouter" className="h-8 dark:invert" />
-                        </Button>
+                            icon={OpenRouterIcon}
+                            alt="OpenRouter"
+                            className="dark:invert"
+                        />
                     </div>
 
                     {selectedProviderType === 'anthropic' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="Anthropic"
-                                inputLabel="API KEY"
-                                inputIcon={faKey}
-                                inputPlaceholder="ant-api-..."
-                                description={newAnthropicProvider.description}
-                                endpoint={newAnthropicProvider.apiKey}
-                                model={newAnthropicProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewAnthropicProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewAnthropicProvider(prev => ({ ...prev, apiKey: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewAnthropicProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={handleAnthropicScan}
-                                onSave={handleAnthropicSave}
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Don't have an API key? Get one at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">console.anthropic.com</a>
-                                        </Text>
-                                    </div>
-                                }
-                            />
-                        </div>
+                        <Provider
+                            name="Anthropic"
+                            inputLabel="API KEY"
+                            inputIcon={faKey}
+                            inputPlaceholder="ant-api-..."
+                            description={newAnthropicProvider.description}
+                            endpoint={newAnthropicProvider.apiKey}
+                            model={newAnthropicProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewAnthropicProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewAnthropicProvider(prev => ({ ...prev, apiKey: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewAnthropicProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={handleAnthropicScan}
+                            onSave={handleAnthropicSave}
+                            footer={
+                                <div className="text-center">
+                                    <Text size="sm" secondary={true}>
+                                        Don't have an API key? Get one at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">console.anthropic.com</a>
+                                    </Text>
+                                </div>
+                            }
+                        />
                     )}
 
                     {selectedProviderType === 'lm-studio' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="LM Studio"
-                                description={newProvider.description}
-                                endpoint={newProvider.endpoint}
-                                model={newProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewProvider(prev => ({ ...prev, endpoint: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={async () => {
-                                    // Scan with the endpoint provided in the inputs
-                                    const result = await fetchModels(false, { endpoint: newProvider.endpoint, apiKey: '' }, true);
-                                    if (Array.isArray(result)) {
-                                        // result can be string[] or Model[].
-                                        // If it's objects, use them. If strings, map to dummy objects.
-                                        const models = result.map(m => typeof m === 'string' ? { id: m, object: 'model' } as Model : m);
-                                        setScannedModels(models);
-                                    }
-                                }}
-                                onSave={async () => {
-                                    if (!config) return;
-
-                                    const providerToAdd = {
-                                        description: newProvider.description,
-                                        endpoint: newProvider.endpoint,
-                                        model: newProvider.model,
-                                        capabilities: newProvider.capabilities
-                                    };
-
-                                    const updatedProviders = [...(config.providers || []), providerToAdd];
-
-                                    const newConfig = {
-                                        ...config,
-                                        providers: updatedProviders
-                                    };
-
-                                    setConfig(newConfig);
-                                    await saveConfig(undefined, newConfig);
-                                    toast.success("Successfully saved provider");
-                                    setIsModalOpen(false);
-                                    setNewProvider({ description: '', endpoint: '', model: '' });
-                                }}
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Download LM Studio from <a href="https://lmstudio.ai/download" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">lmstudio.ai/download</a>
-                                        </Text>
-                                    </div>
+                        <Provider
+                            name="LM Studio"
+                            description={newProvider.description}
+                            endpoint={newProvider.endpoint}
+                            model={newProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewProvider(prev => ({ ...prev, endpoint: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={async () => {
+                                // Scan with the endpoint provided in the inputs
+                                const result = await fetchModels(false, { endpoint: newProvider.endpoint, apiKey: '' }, true);
+                                if (Array.isArray(result)) {
+                                    // result can be string[] or Model[].
+                                    // If it's objects, use them. If strings, map to dummy objects.
+                                    const models = result.map(m => typeof m === 'string' ? { id: m, object: 'model' } as Model : m);
+                                    setScannedModels(models);
                                 }
-                            />
-                        </div>
+                            }}
+                            onSave={async () => {
+                                if (!config) return;
+
+                                const providerToAdd = {
+                                    description: newProvider.description,
+                                    endpoint: newProvider.endpoint,
+                                    model: newProvider.model,
+                                    capabilities: newProvider.capabilities
+                                };
+
+                                const updatedProviders = [...(config.providers || []), providerToAdd];
+
+                                const newConfig = {
+                                    ...config,
+                                    providers: updatedProviders
+                                };
+
+                                setConfig(newConfig);
+                                await saveConfig(undefined, newConfig);
+                                toast.success("Successfully saved provider");
+                                setIsModalOpen(false);
+                                setNewProvider({ description: '', endpoint: '', model: '' });
+                            }}
+                            footer={
+                                <div className="text-center">
+                                    <Text size="sm" secondary={true}>
+                                        Download LM Studio from <a href="https://lmstudio.ai/download" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">lmstudio.ai/download</a>
+                                    </Text>
+                                </div>
+                            }
+                        />
                     )}
 
                     {selectedProviderType === 'google-gemini' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="Google"
-                                inputLabel="API KEY"
-                                inputIcon={faKey}
-                                inputPlaceholder="Enter your Google Gemini API key"
-                                description={newGeminiProvider.description}
-                                endpoint={newGeminiProvider.apiKey}
-                                model={newGeminiProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewGeminiProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewGeminiProvider(prev => ({ ...prev, apiKey: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewGeminiProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={handleGeminiScan}
-                                onSave={handleGeminiSave}
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Don't have an API key? Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">aistudio.google.com</a>
-                                        </Text>
-                                    </div>
-                                }
-                            />
-                        </div>
+                        <Provider
+                            name="Google"
+                            inputLabel="API KEY"
+                            inputIcon={faKey}
+                            inputPlaceholder="Enter your Google Gemini API key"
+                            description={newGeminiProvider.description}
+                            endpoint={newGeminiProvider.apiKey}
+                            model={newGeminiProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewGeminiProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewGeminiProvider(prev => ({ ...prev, apiKey: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewGeminiProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={handleGeminiScan}
+                            onSave={handleGeminiSave}
+                            footer={
+                                <div className="text-center">
+                                    <Text size="sm" secondary={true}>
+                                        Don't have an API key? Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">aistudio.google.com</a>
+                                    </Text>
+                                </div>
+                            }
+                        />
                     )}
 
                     {selectedProviderType === 'lemonade' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="Lemonade"
-                                description={newLemonadeProvider.description}
-                                endpoint={newLemonadeProvider.endpoint}
-                                model={newLemonadeProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewLemonadeProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewLemonadeProvider(prev => ({ ...prev, endpoint: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewLemonadeProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={handleLemonadeScan}
-                                onSave={handleLemonadeSave}
-                                inputPlaceholder="http://localhost:8000"
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Download Lemonade from <a href="https://lemonade-server.ai/" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">lemonade-server.ai</a>
-                                        </Text>
-                                    </div>
-                                }
-                            />
-                        </div>
-                    )}
-                    {selectedProviderType === 'ollama' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="Ollama"
-                                description={newOllamaProvider.description}
-                                endpoint={newOllamaProvider.endpoint}
-                                model={newOllamaProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewOllamaProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewOllamaProvider(prev => ({ ...prev, endpoint: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewOllamaProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={handleOllamaScan}
-                                onSave={handleOllamaSave}
-                                inputPlaceholder="http://localhost:11434"
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Download Ollama from <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">ollama.com</a>
-                                        </Text>
-                                    </div>
-                                }
-                            />
-                        </div>
-                    )}
-                    {selectedProviderType === 'openai' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                            <Provider
-                                name="OpenAI"
-                                inputLabel="API KEY"
-                                inputIcon={faKey}
-                                inputPlaceholder="sk-..."
-                                description={newOpenAIProvider.description}
-                                endpoint={newOpenAIProvider.apiKey}
-                                model={newOpenAIProvider.model}
-                                models={scannedModels}
-                                onDescriptionChange={(val) => setNewOpenAIProvider(prev => ({ ...prev, description: val }))}
-                                onEndpointChange={(val) => setNewOpenAIProvider(prev => ({ ...prev, apiKey: val }))}
-                                onModelChange={(val) => {
-                                    const selectedModel = scannedModels.find(m => m.id === val);
-                                    const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
-                                    setNewOpenAIProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
-                                }}
-                                onScan={handleOpenAIScan}
-                                onSave={handleOpenAISave}
-                                footer={
-                                    <div className="text-center">
-                                        <Text size="sm" secondary={true}>
-                                            Don't have an API key? Get one at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">platform.openai.com</a>
-                                        </Text>
-                                    </div>
-                                }
-                            />
-                        </div>
-                    )}
-                    {selectedProviderType === 'openrouter' && (
-                        <div className="animate-in fade-in slide-in-from-top-4 duration-300 space-y-6">
-                            <Card className="space-y-6">
-                                <Text bold={true} size="xl">OpenRouter</Text>
-                                <div className="space-y-4">
-                                    <Input
-                                        label="API KEY"
-                                        icon={faKey}
-                                        currentText={newOpenRouterProvider.apiKey}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: e.target.value }))}
-                                        placeholder="sk-or-v1-..."
-                                        clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: '' }))}
-                                        className="w-full"
-                                    />
-                                    <Input
-                                        label="(optional) Description"
-                                        icon={faTag}
-                                        currentText={newOpenRouterProvider.description}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, description: e.target.value }))}
-                                        placeholder="My OpenRouter account"
-                                        clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, description: '' }))}
-                                    />
-                                </div>
-                                <Button
-                                    themed={true}
-                                    className="w-full h-12 text-white"
-                                    onClick={handleOpenRouterSave}
-                                    icon={faSave}
-                                >
-                                    Save OpenRouter Configuration
-                                </Button>
-                                <div className="text-center pt-2 border-t border-border-color border-dashed">
+                        <Provider
+                            name="Lemonade"
+                            description={newLemonadeProvider.description}
+                            endpoint={newLemonadeProvider.endpoint}
+                            model={newLemonadeProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewLemonadeProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewLemonadeProvider(prev => ({ ...prev, endpoint: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewLemonadeProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={handleLemonadeScan}
+                            onSave={handleLemonadeSave}
+                            inputPlaceholder="http://localhost:8000"
+                            footer={
+                                <div className="text-center">
                                     <Text size="sm" secondary={true}>
-                                        Don't have an API key? Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline font-bold">openrouter.ai/keys</a>
+                                        Download Lemonade from <a href="https://lemonade-server.ai/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">lemonade-server.ai</a>
                                     </Text>
                                 </div>
-                            </Card>
-                        </div>
+                            }
+                        />
+                    )}
+                    {selectedProviderType === 'ollama' && (
+                        <Provider
+                            name="Ollama"
+                            description={newOllamaProvider.description}
+                            endpoint={newOllamaProvider.endpoint}
+                            model={newOllamaProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewOllamaProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewOllamaProvider(prev => ({ ...prev, endpoint: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewOllamaProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={handleOllamaScan}
+                            onSave={handleOllamaSave}
+                            inputPlaceholder="http://localhost:11434"
+                            footer={
+                                <div className="text-center">
+                                    <Text size="sm" secondary={true}>
+                                        Download Ollama from <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">ollama.com</a>
+                                    </Text>
+                                </div>
+                            }
+                        />
+                    )}
+                    {selectedProviderType === 'openai' && (
+                        <Provider
+                            name="OpenAI"
+                            inputLabel="API KEY"
+                            inputIcon={faKey}
+                            inputPlaceholder="sk-..."
+                            description={newOpenAIProvider.description}
+                            endpoint={newOpenAIProvider.apiKey}
+                            model={newOpenAIProvider.model}
+                            models={scannedModels}
+                            onDescriptionChange={(val) => setNewOpenAIProvider(prev => ({ ...prev, description: val }))}
+                            onEndpointChange={(val) => setNewOpenAIProvider(prev => ({ ...prev, apiKey: val }))}
+                            onModelChange={(val) => {
+                                const selectedModel = scannedModels.find(m => m.id === val);
+                                const capabilities = selectedModel ? detectCapabilities(selectedModel) : {};
+                                setNewOpenAIProvider(prev => ({ ...prev, model: val, description: val, capabilities }));
+                            }}
+                            onScan={handleOpenAIScan}
+                            onSave={handleOpenAISave}
+                            footer={
+                                <div className="text-center">
+                                    <Text size="sm" secondary={true}>
+                                        Don't have an API key? Get one at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">platform.openai.com</a>
+                                    </Text>
+                                </div>
+                            }
+                        />
+                    )}
+                    {selectedProviderType === 'openrouter' && (
+                        <Page padding={0}>
+                            <Text bold={true} size="xl">OpenRouter</Text>
+                            <div className="space-y-4">
+                                <Input
+                                    label="API KEY"
+                                    icon={faKey}
+                                    currentText={newOpenRouterProvider.apiKey}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: e.target.value }))}
+                                    placeholder="sk-or-v1-..."
+                                    clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, apiKey: '' }))}
+                                    className="w-full"
+                                />
+                                <Input
+                                    label="(optional) Description"
+                                    icon={faTag}
+                                    currentText={newOpenRouterProvider.description}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewOpenRouterProvider(prev => ({ ...prev, description: e.target.value }))}
+                                    placeholder="My OpenRouter account"
+                                    clearText={() => setNewOpenRouterProvider(prev => ({ ...prev, description: '' }))}
+                                />
+                            </div>
+                            <Button
+                                themed={true}
+                                onClick={handleOpenRouterSave}
+                                icon={faSave}
+                            >
+                                Save OpenRouter Configuration
+                            </Button>
+                            <div className="text-center pt-2 border-t border-divider border-dashed">
+                                <Text size="sm" secondary={true}>
+                                    Don't have an API key? Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">openrouter.ai/keys</a>
+                                </Text>
+                            </div>
+                        </Page>
                     )}
                 </div>
             </Modal >

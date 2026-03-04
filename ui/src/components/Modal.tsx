@@ -42,10 +42,10 @@ const Modal: React.FC<ModalProps> = ({
             onClick={onClose}
         >
             <div
-                className={`w-full max-w-4xl max-h-[90vh] bg-bg-modal rounded-3xl flex flex-col overflow-hidden animate-in zoom-in duration-100 shadow-2xl ${className}`}
+                className={`w-full max-w-4xl max-h-[90vh] bg-modal rounded-3xl flex flex-col overflow-hidden animate-in zoom-in duration-100 shadow-2xl ${className}`}
                 onClick={e => e.stopPropagation()}
             >
-                <div className="p-6 border-b border-border-color flex justify-between items-center">
+                <div className="p-6 border-b border-divider flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {title && <div className="flex items-center gap-2"><Text size="xl" className="font-semibold">{title}</Text></div>}
                     </div>

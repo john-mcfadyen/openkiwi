@@ -1,18 +1,9 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import Card from './Card';
+import Button from './Button';
 import Text from './Text';
 
-interface AgentFileButtonProps {
-    title: string;
-    description: string;
-    icon: IconDefinition;
-    onClick: () => void;
-    iconColorClass: string;
-}
-
-const AgentFileButton: React.FC<AgentFileButtonProps> = ({
+const AgentFileButton = ({
     title,
     description,
     icon,
@@ -20,9 +11,8 @@ const AgentFileButton: React.FC<AgentFileButtonProps> = ({
     iconColorClass
 }) => {
     return (
-        <Card
-            padding="p-2"
-            className="bg-white dark:bg-bg-primary rounded-xl group flex justify-between items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all cursor-pointer"
+        <Button
+            secondary={true}
             onClick={onClick}
         >
             <div className="flex items-center gap-4">
@@ -44,7 +34,7 @@ const AgentFileButton: React.FC<AgentFileButtonProps> = ({
                     </div>
                 </div>
             </div>
-        </Card>
+        </Button>
     );
 };
 
