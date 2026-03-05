@@ -43,7 +43,7 @@ export class ToolManager {
 
         for (const toolFile of files) {
             const file = toolFile.filename;
-            if (enabledTools[file] === false) {
+            if (!enabledTools[file]) {
                 console.log(`[ToolManager] Skipping disabled tool file: ${file}`);
                 continue;
             }

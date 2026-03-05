@@ -47,7 +47,8 @@ const authUrl = oauth2Client.generateAuthUrl({
     prompt: 'consent',
     scope: [
         'https://www.googleapis.com/auth/tasks',
-        'https://mail.google.com/'
+        'https://mail.google.com/',
+        'https://www.googleapis.com/auth/calendar'
     ],
 });
 
