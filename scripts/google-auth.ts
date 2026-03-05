@@ -15,7 +15,13 @@ if (fs.existsSync(ENV_PATH)) {
         const eqIndex = trimmed.indexOf('=');
         if (eqIndex === -1) continue;
         const key = trimmed.slice(0, eqIndex).trim();
-        const value = trimmed.slice(eqIndex + 1).trim();
+        let value = trimmed.slice(eqIndex + 1).trim();
+
+        // Strip quotes if they exist
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+
         if (!process.env[key]) {
             process.env[key] = value;
         }
@@ -39,7 +45,10 @@ const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI
 const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
-    scope: ['https://www.googleapis.com/auth/tasks'],
+    scope: [
+        'https://www.googleapis.com/auth/tasks',
+        'https://mail.google.com/'
+    ],
 });
 
 const server = http.createServer(async (req, res) => {

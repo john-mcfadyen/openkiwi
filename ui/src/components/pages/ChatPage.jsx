@@ -70,17 +70,9 @@ export default function ChatPage({
                     </div>
                 ) : (
                     <div className="flex items-center gap-4 w-full">
-                        <AgentAvatar agent={currentAgent} />
-                        <div>
-                            <Select
-                                value={selectedAgentId}
-                                onChange={(e) => setSelectedAgentId(e.target.value)}
-                                options={[
-                                    { value: '', label: 'Choose an Agent' },
-                                    ...agents.map(a => ({ value: a.id, label: `${a.name}` }))
-                                ]}
-                            />
-                        </div>
+                        {messages.length > 0 && currentAgent && (
+                            <Text bold={true} size="lg">{currentAgent.name}</Text>
+                        )}
                     </div>
                 )}
             </div>
@@ -94,7 +86,18 @@ export default function ChatPage({
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full py-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <AgentAvatar agent={currentAgent} size="xl" className="mb-6 animate-bounce-slow" />
-                        <Text size="3xl" bold={true}>Chat with {currentAgent?.name}</Text>
+                        <div className="flex items-center justify-center gap-4 flex-nowrap mb-6 w-full max-w-lg mx-auto">
+                            <Text size="3xl" bold={true} className="whitespace-nowrap">Chat with</Text>
+                            <Select
+                                width="w-[180px]"
+                                value={selectedAgentId}
+                                onChange={(e) => setSelectedAgentId(e.target.value)}
+                                options={[
+                                    { value: '', label: 'Choose an Agent' },
+                                    ...agents.map(a => ({ value: a.id, label: `${a.name}` }))
+                                ]}
+                            />
+                        </div>
                         <Text className="max-w-sm" size="md">Your personal AI assistant powered by local inference. Send a message to get started.</Text>
 
                         <div className="grid grid-cols-2 gap-3 mt-10 max-w-lg w-full">

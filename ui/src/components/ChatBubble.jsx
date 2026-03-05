@@ -146,7 +146,7 @@ export const AgentChatBubble = ({
             timestamp={message.timestamp}
             formatTimestamp={formatTimestamp}
             isReasoning={isReasoning}
-            avatar={isReasoning ? <FontAwesomeIcon icon={faBrain} style={{ fontSize: '14px' }} /> : <AgentAvatar agent={agent} size="sm" className="!bg-transparent" />}
+            avatar={isReasoning ? <FontAwesomeIcon icon={faBrain} style={{ fontSize: '14px' }} /> : <AgentAvatar agent={agent} size="md" />}
             className={isReasoning ? 'reasoning-bubble' : 'ai-bubble'}
             stats={message.stats}
             showTokenMetrics={showTokenMetrics}
@@ -159,7 +159,7 @@ export const AgentChatBubble = ({
 export const StreamingChatBubble = ({ agent }) => (
     <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="flex gap-4 items-start">
-            <AgentAvatar agent={agent} size="sm" />
+            <AgentAvatar agent={agent} size="md" />
             <div className="loading-dots">
                 <span className="dot" />
                 <span className="dot" />

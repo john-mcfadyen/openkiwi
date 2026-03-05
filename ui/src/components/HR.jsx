@@ -14,7 +14,7 @@ const HR = ({ width = 'full', className = '' }) => {
     const widthClass = widthMap[width] || 'w-full';
 
     return (
-        <div className={`my-6 flex items-center justify-center ${className}`}>
+        <div className={`my-4 flex items-center justify-center ${className}`}>
             <div className={`h-px bg-divider ${widthClass}`}></div>
         </div>
     );
