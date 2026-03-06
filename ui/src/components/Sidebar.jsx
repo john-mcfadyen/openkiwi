@@ -23,6 +23,7 @@ export default function Sidebar({
     hasAgents,
     hasModels,
     hasActiveAgents,
+    hasUpdates,
     onSettingsClick,
     isProjectManagementEnabled,
     isAgentActivityEnabled
@@ -42,7 +43,7 @@ export default function Sidebar({
         { id: 'gateway', icon: faServer, label: 'Gateway', showAlert: !isGatewayConnected },
         { id: 'models', icon: faCube, label: 'Models', showAlert: !hasModels },
         { id: 'logs', icon: faFileLines, label: 'Logs' },
-        { id: 'settings', icon: faGear, label: 'Settings' },
+        { id: 'settings', icon: faGear, label: 'Settings', showAlert: hasUpdates },
     ].filter((item) => {
         if (item.experimentalProjectManagement && !isProjectManagementEnabled) return false;
         if (item.experimentalActivity && !isAgentActivityEnabled) return false;

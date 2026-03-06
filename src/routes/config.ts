@@ -7,24 +7,7 @@ import { connectedClients } from '../state.js';
 const router = Router();
 
 router.get('/public', (req, res) => {
-    const fullConfig = loadConfig();
-    const redactedConfig = {
-        chat: fullConfig.chat,
-        global: fullConfig.global,
-        system: fullConfig.system,
-        gateway: {
-            port: fullConfig.gateway.port,
-            endpoint: fullConfig.gateway.endpoint
-        },
-        providers: fullConfig.providers.map(p => {
-            const { apiKey, ...rest } = p;
-            return {
-                ...rest,
-                hasApiKey: !!apiKey
-            };
-        })
-    };
-    res.json(redactedConfig);
+    res.json(loadConfig());
 });
 
 router.get('/', (req, res) => {

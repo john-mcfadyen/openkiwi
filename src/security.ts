@@ -59,7 +59,7 @@ export function signMarkdown(content: string): string {
  * Express middleware for basic and query-based token authentication.
  */
 export const authMiddleware = (req: any, res: any, next: any) => {
-    // Allow public config check (redacted) - handle both full path and relative path (if mounted on /api)
+    // Allow public config check - handle both full path and relative path (if mounted on /api)
     if ((req.path === '/api/config/public' || req.path === '/config/public') && req.method === 'GET') {
         return next();
     }

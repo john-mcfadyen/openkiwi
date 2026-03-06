@@ -15,6 +15,7 @@ import { initTelegramHandler } from './Telegram.js';
 import apiRouter from './routes.js';
 import { handleChatConnection } from './chat-handler.js';
 import path from 'node:path';
+import { checkForUpdates } from './services/update-service.js';
 
 // Manually load .env variables before config starts
 const ENV_PATH = path.resolve(process.cwd(), '.env');
@@ -73,7 +74,13 @@ async function startServer() {
         fs.mkdirSync(WORKSPACE_DIR, { recursive: true });
     }
 
-    // Check for updates is now handled manually from the ABOUT page
+    // Check for updates
+    const currentConfig = loadConfig();
+    const updateInterval = currentConfig.system.updateCheckInterval || 3600000;
+    checkForUpdates().catch(e => console.error('Initial update check failed:', e));
+    setInterval(() => {
+        checkForUpdates().catch(e => console.error('Scheduled update check failed:', e));
+    }, updateInterval);
 
     // Initialize WhatsApp and its message handler
     WhatsAppManager.getInstance();

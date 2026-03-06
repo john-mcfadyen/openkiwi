@@ -84,7 +84,8 @@ const ConfigSchema = z.object({
     system: z.object({
         version: z.string().default("2026-02-18"),
         latestVersion: z.string().default(""),
-    }).passthrough().default({ version: "2026-02-18", latestVersion: "" }),
+        updateCheckInterval: z.number().default(3600000),
+    }).passthrough().default({ version: "2026-02-18", latestVersion: "", updateCheckInterval: 3600000 }),
     heartbeat: z.object({
         allowManualTrigger: z.boolean().default(false),
     }).passthrough().default({ allowManualTrigger: false }),

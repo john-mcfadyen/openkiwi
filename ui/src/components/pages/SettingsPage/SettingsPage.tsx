@@ -153,16 +153,25 @@ export default function SettingsPage({
             subtitle="Manage your gateway, providers, and agent personalities."
         >
             <nav className="mb-3 flex gap-6 border-b border-divider overflow-x-auto whitespace-nowrap scrollbar-none pb-px">
-                {['agents', 'chat', 'config', 'general', 'messaging', 'tools', 'version'].map(id => (
-                    <button
-                        key={id}
-                        className="pb-3 relative flex items-center gap-2"
-                        onClick={() => setActiveSettingsSection(id as any)}
-                    >
-                        <Text secondary={activeSettingsSection !== id} size="sm" bold={true} className="uppercase tracking-wide">{id}</Text>
-                        {activeSettingsSection === id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary" />}
-                    </button>
-                ))}
+                {['agents', 'chat', 'config', 'general', 'messaging', 'tools', 'version'].map(id => {
+                    const hasUpdates = id === 'version' && config?.system?.latestVersion && config?.system?.version ? config.system.latestVersion > config.system.version : false;
+
+                    return (
+                        <button
+                            key={id}
+                            className="pb-3 relative flex items-center gap-2"
+                            onClick={() => setActiveSettingsSection(id as any)}
+                        >
+                            <Text secondary={activeSettingsSection !== id} size="sm" bold={true} className="uppercase tracking-wide">
+                                {id}
+                            </Text>
+                            {hasUpdates && (
+                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                            )}
+                            {activeSettingsSection === id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary" />}
+                        </button>
+                    );
+                })}
             </nav>
 
             {loading ? (

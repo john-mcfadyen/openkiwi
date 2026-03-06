@@ -1049,6 +1049,7 @@ function App() {
           hasAgents={agents.length > 0}
           hasModels={(config?.providers?.length ?? 0) > 0}
           hasActiveAgents={hasActiveAgents}
+          hasUpdates={config?.system?.latestVersion && config?.system?.version ? config.system.latestVersion > config.system.version : false}
           onSettingsClick={() => setActiveSettingsSection('version')}
           isProjectManagementEnabled={isProjectManagementEnabled}
           isAgentActivityEnabled={isAgentActivityEnabled}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { faPlus, faUser, faSave, faClock, faBrain, faMicrochip, faHeartPulse, faTrash, faIdBadge, faShield, faClockFour, faUsers, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faUser, faSave, faClock, faBrain, faMicrochip, faHeartPulse, faTrash, faIdBadge, faShield, faClockFour, faUsers, faPlay, faStar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Button from '../../Button'
 import Card from '../../Card'
@@ -583,6 +583,7 @@ export default function AgentsPage({
 
                             <Button
                                 themed={false}
+                                icon={faStar}
                                 onClick={() => {
                                     const updated = { ...agentForm, isDefault: true }
                                     setAgentForm(updated)

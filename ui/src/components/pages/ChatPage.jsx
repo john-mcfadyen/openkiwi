@@ -4,7 +4,11 @@ import {
 } from 'lucide-react'
 import {
     faPaperPlane,
-    faSquare
+    faSquare,
+    faCode,
+    faBookOpen,
+    faMagnifyingGlass,
+    faLightbulb
 } from '@fortawesome/free-solid-svg-icons'
 import Button from '../Button'
 import Select from '../Select'
@@ -98,11 +102,15 @@ export default function ChatPage({
                                 ]}
                             />
                         </div>
-                        <Text className="max-w-sm" size="md">Your personal AI assistant powered by local inference. Send a message to get started.</Text>
 
-                        <div className="grid grid-cols-2 gap-3 mt-10 max-w-lg w-full">
-                            {['Analyze some code', 'Write a short story', 'Help me research', 'Explain a concept'].map(hint => (
-                                <Button key={hint} onClick={() => setInputText(hint)}>{hint}</Button>
+                        <div className="grid grid-cols-2 gap-3 max-w-lg w-full">
+                            {[
+                                { label: 'Analyze some code', icon: faCode },
+                                { label: 'Write a short story', icon: faBookOpen },
+                                { label: 'Help me research', icon: faMagnifyingGlass },
+                                { label: 'Explain a concept', icon: faLightbulb },
+                            ].map(({ label, icon }) => (
+                                <Button key={label} icon={icon} onClick={() => setInputText(label)}>{label}</Button>
                             ))}
                         </div>
                     </div>

@@ -44,21 +44,24 @@ export default function Button(props) {
             onClick={props.onClick || (() => { })}
             title={props.title}
         >
-            {props.icon && (
-                <FontAwesomeIcon
-                    className={`${props.children ? "mr-2" : "mr-0"}`}
-                    icon={props.icon}
-                />
-            )}
-
-            {props.children && (
-                props.themed || props.variant === "danger" ? props.children :
-                    <Text
-                        className="font-semibold flex-1 min-w-0 flex items-center justify-center"
-                        size={props.size || "md"}
-                    >
-                        {props.children}
-                    </Text>
+            {props.themed || props.variant === "danger" ? (
+                <>
+                    {props.icon && (
+                        <FontAwesomeIcon
+                            className={`${props.children ? "mr-2" : "mr-0"}`}
+                            icon={props.icon}
+                        />
+                    )}
+                    {props.children}
+                </>
+            ) : (
+                <Text
+                    className="font-semibold min-w-0 w-full flex items-center justify-center gap-2"
+                    size={props.size || "md"}
+                >
+                    {props.icon && <FontAwesomeIcon icon={props.icon} />}
+                    {props.children}
+                </Text>
             )}
         </button>
     );

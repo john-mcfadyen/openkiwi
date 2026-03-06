@@ -68,7 +68,7 @@ export default function Settings_Version({ config, setConfig, gatewayAddr, gatew
                 </Button>
             </Card>
 
-            {hasChecked && config?.system && (
+            {(hasChecked || config?.system?.latestVersion) && config?.system && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300 mx-auto">
                     {config.system.version === config.system.latestVersion ? (
                         <div className="flex items-center bg-emerald-500/20 p-2 rounded-xl">
