@@ -224,6 +224,7 @@ export function loadConfig(): Config {
             system: {
                 version: "2026-02-18",
                 latestVersion: "",
+                updateCheckInterval: 3600000,
             },
             heartbeat: {
                 allowManualTrigger: false,
