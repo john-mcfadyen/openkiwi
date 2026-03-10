@@ -1,4 +1,5 @@
 import { TaskService } from '../services/task-service.js';
+import { WorkflowService } from '../services/workflow-service.js';
 
 export const get_assigned_tasks = {
     definition: {
@@ -122,6 +123,76 @@ export const update_task_state = {
             return { success: true, task };
         } catch (error: any) {
             return { error: `Failed to update task state: ${error.message}` };
+        }
+    }
+};
+
+export const execute_workflow = {
+    definition: {
+        name: 'execute_workflow',
+        displayName: 'Workflows: Execute',
+        pluginType: 'skill',
+        description: 'Execute a saved workflow by name or ID. Runs all steps in order using the configured tools, passing output from each step to the next.',
+        parameters: {
+            type: 'object',
+            properties: {
+                workflow_name: {
+                    type: 'string',
+                    description: 'The name of the workflow to execute (case-insensitive). Use this if you know the name.'
+                },
+                workflow_id: {
+                    type: 'string',
+                    description: 'The ID of the workflow to execute. Use this if you have the exact ID.'
+                }
+            },
+            required: []
+        }
+    },
+    handler: async ({ workflow_name, workflow_id, _context }: { workflow_name?: string; workflow_id?: string; _context?: { agentId: string } }) => {
+        if (!_context?.agentId) return { error: 'Agent context required' };
+
+        let targetId = workflow_id;
+        if (!targetId) {
+            if (!workflow_name) return { error: 'Provide either workflow_name or workflow_id' };
+            const workflows = WorkflowService.getWorkflows();
+            const found = workflows.find(w => w.name.toLowerCase() === workflow_name.toLowerCase());
+            if (!found) {
+                const available = workflows.map(w => `"${w.name}"`).join(', ');
+                return { error: `No workflow named "${workflow_name}". Available workflows: ${available || 'none'}` };
+            }
+            targetId = found.id;
+        }
+
+        const { executeWorkflow } = await import('../services/workflow-executor.js');
+        const result = await executeWorkflow(targetId, _context.agentId);
+        if (!result.success) return { error: result.error };
+        return { success: true, result: result.finalResponse };
+    }
+};
+
+export const list_workflows = {
+    definition: {
+        name: 'list_workflows',
+        displayName: 'Workflows: List',
+        pluginType: 'skill',
+        description: 'List all saved workflows with their names, IDs, and step counts.',
+        parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+        }
+    },
+    handler: async ({ _context }: { _context?: { agentId: string } }) => {
+        if (!_context?.agentId) return { error: 'Agent context required' };
+        try {
+            const workflows = WorkflowService.getWorkflows();
+            const result = workflows.map(w => {
+                const states = WorkflowService.getWorkflowStates(w.id);
+                return { id: w.id, name: w.name, description: w.description, steps: states.length };
+            });
+            return { workflows: result };
+        } catch (error: any) {
+            return { error: `Failed to list workflows: ${error.message}` };
         }
     }
 };
