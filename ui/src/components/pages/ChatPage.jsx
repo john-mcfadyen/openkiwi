@@ -59,6 +59,24 @@ export default function ChatPage({
     const isNoAgentSelected = !selectedAgentId;
     const isAgentMissing = !currentAgent && !!selectedAgentId;
 
+    let askUserOptions = null;
+    if (!isStreaming && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage?.role === 'assistant' && lastMessage.tool_calls) {
+            const askUserTool = lastMessage.tool_calls.find(tc => (tc.function?.name || tc.name) === 'ask_user');
+            if (askUserTool) {
+                try {
+                    const args = JSON.parse(askUserTool.function?.arguments || askUserTool.arguments || '{}');
+                    if (args.options && Array.isArray(args.options)) {
+                        askUserOptions = args.options;
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Agent ToolBar */}
@@ -75,7 +93,10 @@ export default function ChatPage({
                 ) : (
                     <div className="flex items-center gap-4 w-full">
                         {messages.length > 0 && currentAgent && (
-                            <Text bold={true} size="lg">{currentAgent.name}</Text>
+                            <>
+                                <AgentAvatar agent={currentAgent} size="sm" />
+                                <Text bold={true} size="lg">{currentAgent.name}</Text>
+                            </>
                         )}
                     </div>
                 )}
@@ -147,7 +168,25 @@ export default function ChatPage({
             </div>
 
             {/* Input Section */}
-            <div className="p-6 lg:px-12  pt-10">
+            <div className="p-6 lg:px-12 pt-6">
+
+                {askUserOptions && askUserOptions.length > 0 && (
+                    <div className="max-w-4xl mx-auto mb-4 flex flex-wrap gap-2 justify-center animate-in fade-in slide-in-from-bottom-2">
+                        {askUserOptions.map((opt, idx) => (
+                            <Button
+                                key={idx}
+                                themed={true}
+                                className="!rounded-full px-6 shadow-md hover:scale-105 transition-transform"
+                                onClick={() => {
+                                    setInputText(opt);
+                                }}
+                            >
+                                {opt}
+                            </Button>
+                        ))}
+                    </div>
+                )}
+
                 {isAgentMissing && (
                     <div className="max-w-4xl mx-auto mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm flex items-center justify-center gap-2">
                         <AlertCircle size={16} />
