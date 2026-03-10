@@ -89,11 +89,7 @@ OpenKIWI includes a node-based visual workflow editor inspired by tools like n8n
 
 Each workflow is a directed graph of steps. Drag in a tool node, configure its inputs, connect it to the next step, and run. Workflows can be triggered manually, scheduled via a heartbeat, or called by an agent mid-task.
 
-![](docs/images/workflow-builder.png)
-<!-- TODO: screenshot of the workflow builder canvas -->
-
-![](docs/images/workflow-example.png)
-<!-- TODO: screenshot of a sample workflow (e.g. fetch URL → summarize → send to Telegram) -->
+![](docs/images/workflow-1.png)
 
 Workflows are managed from the **Workflows** page in the sidebar. You can create, rename, delete, and open workflows from there.
 
