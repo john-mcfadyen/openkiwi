@@ -66,7 +66,7 @@ function App() {
   const activeView = getActiveView();
 
 
-  const [activeSettingsSection, setActiveSettingsSection] = useState<'agents' | 'tools' | 'messaging' | 'version' | 'config' | 'chat' | 'general' | 'gateway'>('version');
+  const [activeSettingsSection, setActiveSettingsSection] = useState<'agents' | 'tools' | 'messaging' | 'version' | 'config' | 'chat' | 'general' | 'gateway' | 'connections'>('version');
   const [whatsappStatus, setWhatsappStatus] = useState<{ connected: boolean, qrCode: string | null, isInitializing?: boolean }>({ connected: false, qrCode: null, isInitializing: false });
   const [telegramStatus, setTelegramStatus] = useState<{ connected: boolean, isInitializing?: boolean, botUsername?: string | null }>({ connected: false, isInitializing: false, botUsername: null });
   const [isNavExpanded, setIsNavExpanded] = useState(() => {
@@ -114,14 +114,17 @@ function App() {
   const [isAgentActivityEnabled, setIsAgentActivityEnabled] = useState(() => {
     return localStorage.getItem('experimental_activity') === 'true';
   });
+  const [isProjectsEnabled, setIsProjectsEnabled] = useState(() => {
+    return localStorage.getItem('experimental_project_management') === 'true';
+  });
 
   useEffect(() => {
     if (location.pathname === '/') {
       navigate('/chat', { replace: true });
     }
 
-    if (location.pathname === '/workspace' && !isGatewayConnected && !loading) {
-      toast.error("Authentication Required", { description: "Please connect to the gateway to access the workspace." });
+    if (location.pathname === '/files' && !isGatewayConnected && !loading) {
+      toast.error("Authentication Required", { description: "Please connect to the gateway to access files." });
       navigate('/gateway', { replace: true });
     }
   }, [location.pathname, navigate, isGatewayConnected, loading]);
@@ -420,7 +423,7 @@ function App() {
     if (chatContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
       const distanceToBottom = scrollHeight - scrollTop - clientHeight;
-      isAtBottom.current = distanceToBottom < 10; // 10px threshold
+      isAtBottom.current = distanceToBottom < 40; // 40px threshold
     }
   };
 
@@ -916,7 +919,14 @@ function App() {
         agentId: selectedAgentId,
         messages: newMessages
           .filter(m => !m.isEphemeral)
-          .map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+          .map(m => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+            tool_calls: m.tool_calls,
+            tool_call_id: m.tool_call_id,
+            name: m.name
+          })),
         shouldSummarize: config?.chat.generateSummaries || false
       };
       setLogs(prev => prev); // Removed local logging
@@ -1052,6 +1062,7 @@ function App() {
           hasUpdates={config?.system?.latestVersion && config?.system?.version ? config.system.latestVersion > config.system.version : false}
           onSettingsClick={() => setActiveSettingsSection('version')}
           isProjectManagementEnabled={isProjectManagementEnabled}
+          isProjectsEnabled={isProjectsEnabled}
           isAgentActivityEnabled={isAgentActivityEnabled}
         />
 
@@ -1142,7 +1153,6 @@ function App() {
             <WorkflowsPage
               gatewayAddr={gatewayAddr}
               gatewayToken={gatewayToken}
-              agents={agents}
             />
           ) : activeView === 'models' ? (
             <ModelsPage
@@ -1168,8 +1178,8 @@ function App() {
             <ActivityPage agents={agents} agentStates={agentStates} />
           ) : activeView === 'projects' ? (
             <ProjectsPage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
-          ) : activeView === 'workspace' ? (
-            <WorkspacePage />
+          ) : activeView === 'files' ? (
+            <WorkspacePage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
           ) : (
             <SettingsPage
               activeSettingsSection={activeSettingsSection}
@@ -1205,6 +1215,8 @@ function App() {
               setIsAgentCollaborationEnabled={setIsAgentCollaborationEnabled}
               isAgentActivityEnabled={isAgentActivityEnabled}
               setIsAgentActivityEnabled={setIsAgentActivityEnabled}
+              isProjectsEnabled={isProjectsEnabled}
+              setIsProjectsEnabled={setIsProjectsEnabled}
             />
           )}
         </main>

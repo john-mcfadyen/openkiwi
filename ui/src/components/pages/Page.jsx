@@ -1,5 +1,5 @@
-import React from 'react'
 import Text from '../Text'
+import Column from "../Column"
 
 export default function Page({
     title,
@@ -41,9 +41,7 @@ export default function Page({
                     <div>
                         <Text size="3xl" bold={true}>{title}</Text>
                         {subtitle && (
-                            <p>
-                                <Text secondary={true}>{subtitle}</Text>
-                            </p>
+                            <Column><Text secondary={true}>{subtitle}</Text></Column>
                         )}
                     </div>
                     {headerAction && (
