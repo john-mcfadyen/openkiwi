@@ -132,7 +132,7 @@ export const execute_workflow = {
         name: 'execute_workflow',
         displayName: 'Workflows: Execute',
         pluginType: 'skill',
-        description: 'Execute a saved workflow by name or ID. Runs all steps in order using the configured tools, passing output from each step to the next.',
+        description: 'Execute a previously saved workflow by its exact name or ID. ONLY use this when the user explicitly asks to run a named workflow (e.g. "run the Reddit monitor workflow"). Do NOT use this for ad-hoc tool calls or when the user asks you to call a specific tool directly.',
         parameters: {
             type: 'object',
             properties: {
@@ -155,10 +155,15 @@ export const execute_workflow = {
         if (!targetId) {
             if (!workflow_name) return { error: 'Provide either workflow_name or workflow_id' };
             const workflows = WorkflowService.getWorkflows();
-            const found = workflows.find(w => w.name.toLowerCase() === workflow_name.toLowerCase());
+            // Strip surrounding quotes and whitespace the LLM sometimes includes
+            const cleanName = workflow_name.trim().replace(/^["']|["']$/g, '').trim();
+            const needle = cleanName.toLowerCase();
+            // Exact match first, then partial match as fallback
+            const found = workflows.find(w => w.name.toLowerCase() === needle)
+                       ?? workflows.find(w => w.name.toLowerCase().includes(needle));
             if (!found) {
-                const available = workflows.map(w => `"${w.name}"`).join(', ');
-                return { error: `No workflow named "${workflow_name}". Available workflows: ${available || 'none'}` };
+                const available = workflows.map(w => `"${w.name}" (id: ${w.id})`).join(', ');
+                return { error: `No workflow found matching "${cleanName}". Available workflows: ${available || 'none — no workflows have been created yet'}` };
             }
             targetId = found.id;
         }

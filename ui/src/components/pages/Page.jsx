@@ -9,7 +9,8 @@ export default function Page({
     gridCols,
     gap = 'gap-3',
     align = 'start',
-    padding = 'p-6 lg:p-8'
+    padding = 'p-6 lg:p-8',
+    scroll = true
 }) {
     // Convert numeric gap/padding to string format if necessary
     const gapClass = typeof gap === 'number' ? `gap-${gap}` : gap;
@@ -35,7 +36,7 @@ export default function Page({
         : `flex flex-col ${gapClass} ${align === 'center' ? 'items-center' : ''}`;
 
     return (
-        <div className={`flex-1 ${paddingClass} overflow-y-auto h-full box-border m-0`}>
+        <div className={`flex-1 ${paddingClass} ${scroll ? 'overflow-y-auto' : 'overflow-hidden flex flex-col'} h-full box-border m-0`}>
             {title && (
                 <header className="mb-10 animate-in fade-in duration-300 flex items-center justify-between">
                     <div>
@@ -52,7 +53,7 @@ export default function Page({
                 </header>
             )}
             <div
-                className={`w-full animate-in fade-in duration-300 ${containerClasses}`}
+                className={`w-full animate-in fade-in duration-300 ${containerClasses} ${!scroll ? 'flex-1 min-h-0' : ''}`}
                 style={{ animationDelay: '0.1s', animationFillMode: 'both' }}
             >
                 {children}

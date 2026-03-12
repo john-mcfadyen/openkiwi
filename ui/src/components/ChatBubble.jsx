@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBrain, faArrowUp, faArrowDown, faUser, faEye, faEyeSlash, faWrench, faBoltLightning, faFolder, faPen, faTrash, faGlobe, faMagnifyingGlass, faTerminal, faFolderPlus, faArrowRight, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faBrain, faArrowUp, faArrowDown, faUser, faEye, faEyeSlash, faWrench, faBoltLightning, faFolder, faPen, faTrash, faGlobe, faMagnifyingGlass, faTerminal, faFolderPlus, faArrowRight, faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
 import MarkdownRenderer from './MarkdownRenderer';
 import Text from './Text';
 import { AlertCircle } from 'lucide-react';
@@ -53,6 +53,15 @@ const getToolAction = (name, argsStr, displayName) => {
     }
 };
 
+const ElapsedTimer = ({ startedAt }) => {
+    const [elapsed, setElapsed] = useState(Math.floor((Date.now() - startedAt) / 1000));
+    useEffect(() => {
+        const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+        return () => clearInterval(id);
+    }, [startedAt]);
+    return <span>{elapsed}s</span>;
+};
+
 const ToolCallTimeline = ({ tool_calls }) => {
     if (!tool_calls || tool_calls.length === 0) return null;
     return (
@@ -60,13 +69,54 @@ const ToolCallTimeline = ({ tool_calls }) => {
             {tool_calls.map((tc, idx) => {
                 const name = tc.function?.name || tc.name || '';
                 const { icon, label } = getToolAction(name, tc.function?.arguments, tc.displayName);
+                const duration = tc.durationMs != null
+                    ? (tc.durationMs < 1000 ? `${tc.durationMs}ms` : `${(tc.durationMs / 1000).toFixed(1)}s`)
+                    : null;
                 return (
                     <div key={idx} className="flex items-center gap-2 py-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        <FontAwesomeIcon icon={faCheck} className="w-3 h-3 flex-shrink-0 text-green-500" />
                         <FontAwesomeIcon icon={icon} className="w-3 h-3 flex-shrink-0 opacity-60" />
-                        <span className="font-mono truncate">{label}</span>
+                        <span className="font-mono truncate flex-1">{label}</span>
+                        {duration && <span className="opacity-50 shrink-0">{duration}</span>}
                     </div>
                 );
             })}
+        </div>
+    );
+};
+
+export const ToolActivityRows = ({ tool_calls }) => {
+    if (!tool_calls || tool_calls.length === 0) return null;
+    return (
+        <div className="flex flex-col gap-0.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {tool_calls.map((tc, idx) => {
+                const name = tc.function?.name || tc.name || '';
+                const { icon, label } = getToolAction(name, tc.function?.arguments, tc.displayName);
+                const duration = tc.durationMs != null
+                    ? (tc.durationMs < 1000 ? `${tc.durationMs}ms` : `${(tc.durationMs / 1000).toFixed(1)}s`)
+                    : null;
+                return (
+                    <div key={idx} className="flex items-center gap-2 py-1 px-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        <FontAwesomeIcon icon={faCheck} className="w-3 h-3 flex-shrink-0 text-green-500" />
+                        <FontAwesomeIcon icon={icon} className="w-3 h-3 flex-shrink-0 opacity-60" />
+                        <span className="font-mono">{label}</span>
+                        {duration && <span className="opacity-50 ml-auto shrink-0">{duration}</span>}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+export const ActiveToolBubble = ({ activeTool }) => {
+    const name = activeTool.function?.name || activeTool.name || '';
+    const { icon, label } = getToolAction(name, activeTool.function?.arguments, activeTool.displayName);
+    return (
+        <div className="flex items-center gap-2 py-1 px-1 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse flex-shrink-0" />
+            <FontAwesomeIcon icon={icon} className="w-3 h-3 flex-shrink-0 opacity-60" />
+            <span className="font-mono">{label}</span>
+            <span className="opacity-50">· <ElapsedTimer startedAt={activeTool.startedAt} /></span>
         </div>
     );
 };

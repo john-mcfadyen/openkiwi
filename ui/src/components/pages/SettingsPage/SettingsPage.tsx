@@ -17,6 +17,7 @@ import Settings_General from './Settings_General'
 import Settings_Messaging from './Settings_Messaging'
 import Settings_Tools from './Settings_Tools'
 import Settings_Connections from './Settings_Connections'
+import Settings_Skills from './Settings_Skills'
 
 // Re-using types from App.tsx - ideally these should be moved to a types.ts file
 interface Config {
@@ -74,8 +75,8 @@ interface ToolDefinition {
 }
 
 interface SettingsPageProps {
-    activeSettingsSection: 'version' | 'config' | 'chat' | 'agents' | 'general' | 'messaging' | 'tools' | 'gateway' | 'connections';
-    setActiveSettingsSection: (section: 'version' | 'config' | 'chat' | 'agents' | 'general' | 'messaging' | 'tools' | 'gateway' | 'connections') => void;
+    activeSettingsSection: 'version' | 'config' | 'chat' | 'agents' | 'general' | 'messaging' | 'tools' | 'gateway' | 'connections' | 'skills';
+    setActiveSettingsSection: (section: 'version' | 'config' | 'chat' | 'agents' | 'general' | 'messaging' | 'tools' | 'gateway' | 'connections' | 'skills') => void;
     loading: boolean;
     theme: 'dark' | 'light' | 'system';
     setTheme: (theme: 'dark' | 'light' | 'system') => void;
@@ -158,7 +159,7 @@ export default function SettingsPage({
             subtitle="Manage your gateway, providers, and agent personalities."
         >
             <nav className="mb-3 flex gap-6 border-b border-divider overflow-x-auto whitespace-nowrap scrollbar-none pb-px">
-                {['agents', 'chat', 'config', 'connections', 'general', 'messaging', 'tools', 'version'].map(id => {
+                {['agents', 'chat', 'config', 'connections', 'general', 'messaging', 'skills', 'tools', 'version'].map(id => {
                     const hasUpdates = id === 'version' && config?.system?.latestVersion && config?.system?.version ? config.system.latestVersion > config.system.version : false;
 
                     return (
@@ -249,6 +250,13 @@ export default function SettingsPage({
                         />
                     )}
 
+
+                    {activeSettingsSection === 'skills' && (
+                        <Settings_Skills
+                            gatewayAddr={gatewayAddr}
+                            gatewayToken={gatewayToken}
+                        />
+                    )}
 
                     {activeSettingsSection === 'version' && (
                         <Settings_Version

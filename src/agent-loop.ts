@@ -41,6 +41,7 @@ export interface AgentLoopOptions {
     onDelta?: (content: string) => void;
     onUsage?: (usageStats: any) => void;
     onToolCall?: (toolCall: any) => void;
+    onToolEnd?: (toolCallId: string, name: string, durationMs: number, success: boolean) => void;
     abortSignal?: AbortSignal;
 }
 
@@ -59,7 +60,7 @@ export interface AgentLoopResult {
 export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoopResult> {
     let toolLoop = true;
     let loopCount = 0;
-    const maxLoops = options.maxLoops && options.maxLoops > 5 ? options.maxLoops : 150;
+    const maxLoops = options.maxLoops ?? 150;
 
     let finalAiResponse = '';
     let loopYieldState: any = undefined;
@@ -255,8 +256,27 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
             chatHistory.push(assistantMsg);
 
             for (const toolCall of actualToolCalls) {
+                // Stop executing tools if the agent was aborted between calls
+                if (options.abortSignal?.aborted) {
+                    toolLoop = false;
+                    break;
+                }
+
                 const name = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments || '{}');
+                let args: any;
+                try {
+                    args = JSON.parse(toolCall.function.arguments || '{}');
+                } catch (parseErr: any) {
+                    // Malformed JSON from the LLM — report it back as a tool error so the agent can self-correct
+                    chatHistory.push({
+                        role: 'tool',
+                        tool_call_id: toolCall.id,
+                        name,
+                        content: JSON.stringify({ error: `Invalid tool arguments (JSON parse failed): ${parseErr.message}. Please retry with valid JSON arguments.` }),
+                        timestamp: Math.floor(Date.now() / 1000)
+                    });
+                    continue;
+                }
 
                 console.log(`[Tool Execution] Calling tool '${name}' with arguments:`, JSON.stringify(args, null, 2));
 
@@ -274,10 +294,16 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
                     const toolConfig = options.agentToolsConfig?.[name] ?? globalToolsConfig?.[name];
 
                     let result;
+                    const toolStartTime = Date.now();
+                    let toolSucceeded = false;
                     try {
-                        result = await ToolManager.callTool(name, args, { agentId: options.agentId, toolConfig });
+                        result = await ToolManager.callTool(name, args, { agentId: options.agentId, toolConfig, abortSignal: options.abortSignal });
+                        toolSucceeded = true;
                     } finally {
                         AgentManager.setAgentState(options.agentId, prevState.status, prevState.details);
+                        if (options.onToolEnd) {
+                            options.onToolEnd(toolCall.id, name, Date.now() - toolStartTime, toolSucceeded);
+                        }
                     }
 
                     if (options.signToolUrls && result && typeof result === 'object') {

@@ -8,6 +8,7 @@ import { logger } from './logger.js';
 import { runAgentLoop } from './agent-loop.js';
 import { getChatCompletion } from './llm-provider.js';
 import { connectedClients, pendingToolCalls } from './state.js';
+import { SkillManager } from './skill-manager.js';
 
 export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
     const rawIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
@@ -159,6 +160,13 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
             const payload: any[] = [];
             let systemPrompt = agent?.systemPrompt || currentConfig.global?.systemPrompt || "You are a helpful AI assistant.";
 
+            // Inject available skills into system prompt
+            const skillDefs = SkillManager.getSkillDefinitions();
+            if (skillDefs.length > 0) {
+                const skillList = skillDefs.map(s => `- **${s.name}**: ${s.description}`).join('\n');
+                systemPrompt += `\n\n## Available Agent Skills\nThe following skills are available to you. CRITICAL: Before responding to ANY user request, check whether a skill's description matches the task. If a match exists, you MUST call \`activate_skill\` first and follow its instructions — never answer from your own knowledge when a matching skill is available. If the skill's response includes an \`allowed_tools\` list, those tools are pre-approved for use within that skill's workflow and do NOT require \`ask_user\` confirmation.\n\n${skillList}`;
+            }
+
             // Anti-hallucination directive
             systemPrompt += "\n\nCRITICAL INSTRUCTION: If you intend to take an action (like modifying a file, searching memory, etc.), you MUST use the provided tools to do so. NEVER claim to have updated a file or taken an action unless you have explicitly called the corresponding tool and received a successful response. DO NOT hallucinate actions.";
             systemPrompt += "\nCRITICAL INSTRUCTION: If you intend to use a tool that is marked with '(Requires Approval)', you MUST first use the 'ask_user' tool to explain what you are about to do and ask for their permission. You must wait for their affirmative response before calling the restricted tool.";
@@ -274,6 +282,9 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                     },
                     onToolCall: (toolCall: any) => {
                         ws.send(JSON.stringify({ type: 'tool_call', toolCall }));
+                    },
+                    onToolEnd: (toolCallId: string, name: string, durationMs: number, success: boolean) => {
+                        ws.send(JSON.stringify({ type: 'tool_end', toolCallId, name, durationMs, success }));
                     }
                 });
 

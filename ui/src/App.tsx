@@ -104,6 +104,7 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeTool, setActiveTool] = useState<any>(null);
   const [isGatewayConnected, setIsGatewayConnected] = useState(false);
   const [isProjectManagementEnabled, setIsProjectManagementEnabled] = useState(() => {
     return localStorage.getItem('experimental_projects') === 'true';
@@ -807,8 +808,9 @@ function App() {
 
     msgs.forEach(msg => {
       // Check for thought/reasoning tags in assistant messages
-      if (msg.role === 'assistant' && msg.content && /<(think|thought|reasoning)>/.test(msg.content)) {
+      if (msg.role === 'assistant' && msg.content && /<(think|thought|reasoning)>|<\|channel\|>/.test(msg.content)) {
         const thinkMatch = msg.content.match(/<(think|thought|reasoning)>([\s\S]*?)<\/\1>/i);
+        const channelMatch = !thinkMatch && msg.content.match(/<\|channel\|>([\s\S]*?)(?:<\|im_end\|>|$)/i);
         if (thinkMatch) {
           // Add the reasoning message
           processed.push({
@@ -825,6 +827,20 @@ function App() {
               ...msg,
               content: cleanContent
             });
+          }
+        } else if (channelMatch) {
+          // Normalize model-specific <|channel|> routing tokens into a reasoning block.
+          // Discard the routing metadata (before <|message|>); only keep the message content.
+          const parts = channelMatch[1].split('<|message|>');
+          const reasoningContent = (parts.length > 1 ? parts.slice(1).join('\n') : parts[0]).trim();
+          processed.push({
+            role: 'reasoning',
+            content: reasoningContent,
+            timestamp: msg.timestamp
+          });
+          const cleanContent = msg.content.replace(channelMatch[0], '').trim();
+          if (cleanContent || (msg.tool_calls && msg.tool_calls.length > 0)) {
+            processed.push({ ...msg, content: cleanContent });
           }
         } else {
           processed.push({ ...msg });
@@ -943,7 +959,9 @@ function App() {
     let currentAiMessage = '';
     let currentReasoning = '';
     let isInsideReasoning = false;
+    let inChannelHeader = false;
     let completedTools: any[] = [];
+    let currentActiveTool: any = null;
 
     socket.onmessage = (event) => {
       // setLogs(prev => [{ timestamp: new Date().toISOString(), data: `[RECEIVED] ${event.data}` }, ...prev].slice(0, 100)); // Keep last 100 logs
@@ -954,11 +972,28 @@ function App() {
         if (chunk.includes('<think>') || chunk.includes('<thought>') || chunk.includes('<reasoning>')) {
           isInsideReasoning = true;
         }
+        if (chunk.includes('<|channel|>')) {
+          isInsideReasoning = true;
+          inChannelHeader = true;
+        }
 
         if (isInsideReasoning) {
-          currentReasoning += chunk.replace(/<(think|thought|reasoning)>|<\/(think|thought|reasoning)>/gi, '');
-          if (chunk.includes('</think>') || chunk.includes('</thought>') || chunk.includes('</reasoning>')) {
+          if (inChannelHeader) {
+            // Discard routing metadata before <|message|>; only keep content after it
+            if (chunk.includes('<|message|>')) {
+              inChannelHeader = false;
+              const afterMessage = chunk.split('<|message|>').slice(1).join('').replace(/<\|im_end\|>/g, '');
+              currentReasoning += afterMessage;
+            }
+            // else: still in header, discard this chunk entirely
+          } else {
+            currentReasoning += chunk
+              .replace(/<(think|thought|reasoning)>|<\/(think|thought|reasoning)>/gi, '')
+              .replace(/<\|channel\|>|<\|message\|>|<\|im_end\|>/g, '');
+          }
+          if (chunk.includes('</think>') || chunk.includes('</thought>') || chunk.includes('</reasoning>') || chunk.includes('<|im_end|>')) {
             isInsideReasoning = false;
+            inChannelHeader = false;
           }
         } else {
           currentAiMessage += chunk;
@@ -973,13 +1008,30 @@ function App() {
         }
         setMessages(streamingMsgs);
       } else if (data.type === 'tool_call') {
-        completedTools.push(data.toolCall);
+        currentActiveTool = { ...data.toolCall, startedAt: Date.now() };
+        setActiveTool(currentActiveTool);
         const streamingMsgs: Message[] = [...newMessages];
         if (currentReasoning) {
           streamingMsgs.push({ role: 'reasoning', content: currentReasoning, timestamp: aiResponseTimestamp });
         }
-        streamingMsgs.push({ role: 'assistant', content: currentAiMessage, timestamp: aiResponseTimestamp, tool_calls: [...completedTools] });
+        if (currentAiMessage || completedTools.length > 0) {
+          streamingMsgs.push({ role: 'assistant', content: currentAiMessage, timestamp: aiResponseTimestamp, tool_calls: [...completedTools] });
+        }
         setMessages(streamingMsgs);
+      } else if (data.type === 'tool_end') {
+        if (currentActiveTool) {
+          completedTools.push({ ...currentActiveTool, durationMs: data.durationMs });
+          currentActiveTool = null;
+          setActiveTool(null);
+          const streamingMsgs: Message[] = [...newMessages];
+          if (currentReasoning) {
+            streamingMsgs.push({ role: 'reasoning', content: currentReasoning, timestamp: aiResponseTimestamp });
+          }
+          if (currentAiMessage || completedTools.length > 0) {
+            streamingMsgs.push({ role: 'assistant', content: currentAiMessage, timestamp: aiResponseTimestamp, tool_calls: [...completedTools] });
+          }
+          setMessages(streamingMsgs);
+        }
       } else if (data.type === 'usage') {
         const stats = {
           tps: data.usage.tps,
@@ -1000,6 +1052,7 @@ function App() {
         });
       } else if (data.type === 'done') {
         setIsStreaming(false);
+        setActiveTool(null);
         socket.close();
         if (data.messages && data.messages.length > 0) {
           setMessages(processSessionMessages(data.messages));
@@ -1119,6 +1172,7 @@ function App() {
               messages={messages}
               config={config}
               isStreaming={isStreaming}
+              activeTool={activeTool}
               inputText={inputText}
               setInputText={setInputText}
               handleSend={handleSend}

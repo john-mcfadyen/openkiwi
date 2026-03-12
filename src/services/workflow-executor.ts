@@ -43,16 +43,24 @@ export async function executeWorkflow(workflowId: string, agentId: string): Prom
         } catch {
             // instructions is plain text, treat as prompt
         }
-        return `STEP ${i + 1}: ${state.name}\nTool: ${toolId}\nInstructions: ${stepPrompt || '(no specific instructions provided)'}`;
+
+        if (toolId !== 'unknown') {
+            return `STEP ${i + 1}: ${state.name}\nCall the "${toolId}" tool exactly once with these parameters:\n${stepPrompt || '(no parameters provided)'}`;
+        }
+        return `STEP ${i + 1}: ${state.name}\n${stepPrompt || '(no instructions provided)'}`;
     }).join('\n\n');
 
     const prompt = `You are executing a workflow named "${workflow.name}"${workflow.description ? ` — ${workflow.description}` : ''}.
 
-Execute the following steps IN ORDER. Each step specifies which tool to use and what to do. Pass the relevant output from each step as input to the next step where needed.
+Execute the following steps IN ORDER. Rules you MUST follow:
+- Call each step's tool EXACTLY ONCE using the parameters provided in the instructions.
+- Do NOT make additional tool calls beyond what each step explicitly asks for. For example, if a step fetches a list of URLs, do not then fetch each URL individually.
+- Pass the relevant output from each step as input to the next step where needed.
+- Once all steps are complete, stop using tools and provide a brief summary of what was accomplished.
 
 ${stepDescriptions}
 
-Execute all steps now using the specified tools. After completing all steps, provide a brief summary of what was accomplished.`;
+Execute all steps now, one tool call per step, then summarize.`;
 
     try {
         const { finalResponse } = await runAgentLoop({
@@ -63,7 +71,7 @@ Execute all steps now using the specified tools. After completing all steps, pro
                 { role: 'system', content: agent.systemPrompt },
                 { role: 'user', content: prompt }
             ],
-            maxLoops: states.length * 5,
+            maxLoops: Math.max(states.length * 3, 6),
             signToolUrls: false,
             agentToolsConfig: agent.tools
         });

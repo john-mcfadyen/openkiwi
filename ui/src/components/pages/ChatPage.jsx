@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, Fragment } from 'react'
 import {
     AlertCircle
 } from 'lucide-react'
@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Button from '../Button'
 import Select from '../Select'
-import { AgentChatBubble, UserChatBubble, StreamingChatBubble } from '../ChatBubble'
+import { AgentChatBubble, UserChatBubble, StreamingChatBubble, ActiveToolBubble, ToolActivityRows } from '../ChatBubble'
 import Text from '../Text'
 import Badge from '../Badge'
 import TextArea from '../TextArea'
@@ -25,6 +25,7 @@ export default function ChatPage({
     messages,
     config,
     isStreaming,
+    activeTool,
     inputText,
     setInputText,
     handleSend,
@@ -59,6 +60,7 @@ export default function ChatPage({
     const isNoAgentSelected = !selectedAgentId;
     const isAgentMissing = !currentAgent && !!selectedAgentId;
 
+    let askUserQuestion = null;
     let askUserOptions = null;
     if (!isStreaming && messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
@@ -67,9 +69,8 @@ export default function ChatPage({
             if (askUserTool) {
                 try {
                     const args = JSON.parse(askUserTool.function?.arguments || askUserTool.arguments || '{}');
-                    if (args.options && Array.isArray(args.options)) {
-                        askUserOptions = args.options;
-                    }
+                    if (args.question) askUserQuestion = args.question;
+                    if (args.options && Array.isArray(args.options)) askUserOptions = args.options;
                 } catch (e) {
                     // ignore
                 }
@@ -151,6 +152,25 @@ export default function ChatPage({
                         );
                     }
 
+                    if (msg.role === 'assistant') {
+                        const hasTools = msg.tool_calls?.length > 0;
+                        const hasContent = !!msg.content?.trim();
+                        if (!hasTools && !hasContent) return null;
+                        return (
+                            <Fragment key={i}>
+                                {hasTools && <ToolActivityRows tool_calls={msg.tool_calls} />}
+                                {hasContent && (
+                                    <AgentChatBubble
+                                        message={{ ...msg, tool_calls: undefined }}
+                                        agent={currentAgent}
+                                        formatTimestamp={formatTimestamp}
+                                        showTokenMetrics={config?.chat.showTokenMetrics}
+                                    />
+                                )}
+                            </Fragment>
+                        );
+                    }
+
                     return (
                         <AgentChatBubble
                             key={i}
@@ -161,7 +181,10 @@ export default function ChatPage({
                         />
                     );
                 })}
-                {isStreaming && (
+                {isStreaming && activeTool && (
+                    <ActiveToolBubble activeTool={activeTool} />
+                )}
+                {isStreaming && !activeTool && (
                     <StreamingChatBubble agent={currentAgent} />
                 )}
                 <div ref={messagesEndRef} className="h-4" />
@@ -170,9 +193,13 @@ export default function ChatPage({
             {/* Input Section */}
             <div className="p-6 lg:px-12 pt-6">
 
-                {askUserOptions && askUserOptions.length > 0 && (
-                    <div className="max-w-4xl mx-auto mb-4 flex flex-wrap gap-2 justify-center animate-in fade-in slide-in-from-bottom-2">
-                        {askUserOptions.map((opt, idx) => (
+                {(askUserQuestion || (askUserOptions && askUserOptions.length > 0)) && (
+                    <div className="max-w-4xl mx-auto mb-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                        {askUserQuestion && (
+                            <p className="text-sm text-center text-secondary px-4">{askUserQuestion}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 justify-center">
+                        {askUserOptions && askUserOptions.map((opt, idx) => (
                             <Button
                                 key={idx}
                                 themed={true}
@@ -184,6 +211,7 @@ export default function ChatPage({
                                 {opt}
                             </Button>
                         ))}
+                        </div>
                     </div>
                 )}
 
