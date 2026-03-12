@@ -5,6 +5,8 @@ import Text from '../Text'
 import Card from '../Card'
 import Column from '../Column'
 import Button from '../Button'
+import Modal from '../Modal'
+import Input from '../Input'
 import WorkflowBuilder from '../Workflows/WorkflowBuilder'
 import { Workflow } from '../../types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -144,67 +146,47 @@ export default function WorkflowsPage({ gatewayAddr, gatewayToken }: WorkflowsPa
             }
         >
             {/* New workflow dialog */}
-            {showNewDialog && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowNewDialog(false); setNewName('') }}>
-                    <div className="bg-bg-primary border border-border rounded-xl p-6 w-full max-w-sm shadow-xl space-y-4" onClick={e => e.stopPropagation()}>
-                        <Text bold={true} size="lg">New Workflow</Text>
-                        <input
-                            ref={nameInputRef}
-                            type="text"
-                            value={newName}
-                            onChange={e => setNewName(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleCreateWorkflow(); if (e.key === 'Escape') { setShowNewDialog(false); setNewName('') } }}
-                            placeholder="Workflow name"
-                            className="w-full px-3 py-2 bg-bg-secondary border border-border rounded-lg text-sm outline-none focus:border-accent-primary"
-                        />
-                        <div className="flex gap-2 justify-end">
-                            <Button onClick={() => { setShowNewDialog(false); setNewName('') }}>Cancel</Button>
-                            <Button themed={true} onClick={handleCreateWorkflow} disabled={!newName.trim()}>Create</Button>
-                        </div>
+            <Modal isOpen={showNewDialog} onClose={() => { setShowNewDialog(false); setNewName('') }} title="New Workflow" className="max-w-sm">
+                <form className="p-6 space-y-4" onSubmit={e => { e.preventDefault(); handleCreateWorkflow(); }}>
+                    <Input
+                        ref={nameInputRef}
+                        currentText={newName}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
+                        placeholder="Workflow name"
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <Button onClick={() => { setShowNewDialog(false); setNewName('') }}>Cancel</Button>
+                        <Button themed={true} disabled={!newName.trim()}>Create</Button>
                     </div>
-                </div>
-            )}
+                </form>
+            </Modal>
 
             {/* Rename dialog */}
-            {pendingRename && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setPendingRename(null); setRenameName('') }}>
-                    <div className="bg-bg-primary border border-border rounded-xl p-6 w-full max-w-sm shadow-xl space-y-4" onClick={e => e.stopPropagation()}>
-                        <Text bold={true} size="lg">Rename Workflow</Text>
-                        <input
-                            ref={renameInputRef}
-                            type="text"
-                            value={renameName}
-                            onChange={e => setRenameName(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleRenameWorkflow(); if (e.key === 'Escape') { setPendingRename(null); setRenameName('') } }}
-                            placeholder="Workflow name"
-                            className="w-full px-3 py-2 bg-bg-secondary border border-border rounded-lg text-sm outline-none focus:border-accent-primary"
-                        />
-                        <div className="flex gap-2 justify-end">
-                            <Button onClick={() => { setPendingRename(null); setRenameName('') }}>Cancel</Button>
-                            <Button themed={true} onClick={handleRenameWorkflow} disabled={!renameName.trim()}>Rename</Button>
-                        </div>
+            <Modal isOpen={!!pendingRename} onClose={() => { setPendingRename(null); setRenameName('') }} title="Rename Workflow" className="max-w-sm">
+                <form className="p-6 space-y-4" onSubmit={e => { e.preventDefault(); handleRenameWorkflow(); }}>
+                    <Input
+                        ref={renameInputRef}
+                        currentText={renameName}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenameName(e.target.value)}
+                        placeholder="Workflow name"
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <Button onClick={() => { setPendingRename(null); setRenameName('') }}>Cancel</Button>
+                        <Button themed={true} disabled={!renameName.trim()}>Rename</Button>
                     </div>
-                </div>
-            )}
+                </form>
+            </Modal>
 
             {/* Delete confirmation dialog */}
-            {pendingDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setPendingDelete(null)}>
-                    <div className="bg-bg-primary border border-border rounded-xl p-6 w-full max-w-sm shadow-xl space-y-4" onClick={e => e.stopPropagation()}>
-                        <Text bold={true} size="lg">Delete Workflow</Text>
-                        <Text secondary={true}>Delete <span className="text-primary font-medium">"{pendingDelete.name}"</span>? This cannot be undone.</Text>
-                        <div className="flex gap-2 justify-end">
-                            <Button onClick={() => setPendingDelete(null)}>Cancel</Button>
-                            <button
-                                onClick={handleDeleteWorkflow}
-                                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
-                            >
-                                Delete
-                            </button>
-                        </div>
+            <Modal isOpen={!!pendingDelete} onClose={() => setPendingDelete(null)} title="Delete Workflow" className="max-w-sm">
+                <div className="p-6 space-y-4">
+                    <Text secondary={true}>Delete <span className="text-primary font-medium">"{pendingDelete?.name}"</span>? This cannot be undone.</Text>
+                    <div className="flex gap-2 justify-end">
+                        <Button onClick={() => setPendingDelete(null)}>Cancel</Button>
+                        <Button variant="danger" onClick={handleDeleteWorkflow}>Delete</Button>
                     </div>
                 </div>
-            )}
+            </Modal>
 
             {loading ? (
                 <div className="flex items-center justify-center p-20">

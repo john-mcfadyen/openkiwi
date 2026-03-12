@@ -226,7 +226,7 @@ export default function ProjectsPage({ gatewayAddr, gatewayToken }: ProjectsPage
                             <Card className="flex flex-col flex-1 !p-0 overflow-hidden">
                                 {selectedFileName ? (
                                     <>
-                                        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-bg-sidebar">
+                                        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-sidebar">
                                             <div className="flex items-center gap-3">
                                                 <Text bold={true} size="lg">{selectedFileName}</Text>
                                             </div>
@@ -271,14 +271,14 @@ export default function ProjectsPage({ gatewayAddr, gatewayToken }: ProjectsPage
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center bg-bg-card rounded-3xl h-full p-6">
+                                    <div className="flex-1 flex flex-col items-center justify-center bg-card rounded-3xl h-full p-6">
                                         <Text secondary={true}>Select a file from the list above to view or edit</Text>
                                     </div>
                                 )}
                             </Card>
                         </>
                     ) : (
-                        <Card className="flex flex-col h-full items-center justify-center bg-bg-card rounded-3xl !border-0 p-6">
+                        <Card className="flex flex-col h-full items-center justify-center bg-card rounded-3xl !border-0 p-6">
                             <FontAwesomeIcon icon={faFolder} className="text-5xl text-neutral-200 dark:text-neutral-800 mb-4" />
                             <Text secondary={true}>Select a project to view files</Text>
                         </Card>

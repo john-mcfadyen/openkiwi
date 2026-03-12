@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faFolder, faFolderOpen, faFile, faFileCode, faFileAlt,
-    faImage, faChevronRight, faChevronDown, faSpinner
+    faImage, faChevronRight, faChevronDown, faSpinner, faRotateRight
 } from '@fortawesome/free-solid-svg-icons';
 import Text from '../Text';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -161,15 +161,18 @@ export default function WorkspacePage({ gatewayAddr, gatewayToken }: WorkspacePa
         }));
     }, [gatewayAddr, gatewayToken]);
 
-    // Load root on mount
-    useEffect(() => {
+    const loadRoot = useCallback(() => {
         setLoadingRoot(true);
+        setRootError(null);
         fetchEntries('').then(entries => {
             setTree(entries);
         }).catch(() => {
             setRootError('Failed to load files. Make sure the server is running.');
         }).finally(() => setLoadingRoot(false));
     }, [fetchEntries]);
+
+    // Load root on mount
+    useEffect(() => { loadRoot(); }, [loadRoot]);
 
     const updateNode = (nodes: TreeNode[], targetPath: string, updater: (n: TreeNode) => TreeNode): TreeNode[] => {
         return nodes.map(n => {
@@ -295,8 +298,16 @@ export default function WorkspacePage({ gatewayAddr, gatewayToken }: WorkspacePa
         <div className="flex h-full overflow-hidden">
             {/* Tree sidebar */}
             <div className="w-72 flex-shrink-0 border-r border-divider flex flex-col bg-sidebar overflow-hidden">
-                <div className="px-4 py-3 border-b border-divider flex-shrink-0">
+                <div className="px-4 py-3 border-b border-divider flex-shrink-0 flex items-center justify-between">
                     <Text bold={true} size="sm" className="uppercase tracking-wider text-secondary">Files</Text>
+                    <button
+                        onClick={loadRoot}
+                        disabled={loadingRoot}
+                        title="Refresh"
+                        className="text-secondary hover:text-primary transition-colors disabled:opacity-40"
+                    >
+                        <FontAwesomeIcon icon={faRotateRight} className={`text-sm ${loadingRoot ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
                 <div className="flex-1 overflow-y-auto py-2 px-1 custom-scrollbar">
                     {loadingRoot ? (
