@@ -1,11 +1,75 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBrain, faArrowUp, faArrowDown, faUser, faEye, faEyeSlash, faWrench, faBoltLightning } from '@fortawesome/free-solid-svg-icons';
+import { faBrain, faArrowUp, faArrowDown, faUser, faEye, faEyeSlash, faWrench, faBoltLightning, faFolder, faPen, faTrash, faGlobe, faMagnifyingGlass, faTerminal, faFolderPlus, faArrowRight, faCopy } from '@fortawesome/free-solid-svg-icons';
 import MarkdownRenderer from './MarkdownRenderer';
 import Text from './Text';
-import Badge from './Badge';
 import { AlertCircle } from 'lucide-react';
 import AgentAvatar from './AgentAvatar';
+
+const getBasename = (filePath) => {
+    if (!filePath) return '';
+    const parts = filePath.replace(/\\/g, '/').split('/').filter(Boolean);
+    if (parts.length <= 2) return filePath;
+    return '…/' + parts.slice(-2).join('/');
+};
+
+const getToolAction = (name, argsStr, displayName) => {
+    try {
+        const args = JSON.parse(argsStr || '{}');
+        if (name === 'file_manager') {
+            const p = getBasename(args.path);
+            switch (args.action) {
+                case 'delete': return { icon: faTrash,      label: `Deleting ${p}` };
+                case 'mkdir':  return { icon: faFolderPlus, label: `Creating directory ${p}` };
+                case 'move':   return { icon: faArrowRight, label: `Moving ${p}` };
+                case 'copy':   return { icon: faCopy,       label: `Copying ${p}` };
+                default:       return { icon: faWrench,     label: displayName || name };
+            }
+        }
+        switch (name) {
+            // Core tools
+            case 'write':          return { icon: faPen,             label: `Writing ${getBasename(args.path)}` };
+            case 'read':           return { icon: faEye,             label: `Reading ${getBasename(args.path)}` };
+            case 'edit':           return { icon: faPen,             label: `Editing ${getBasename(args.path)}` };
+            case 'ls':             return { icon: faFolder,          label: `Listing ${getBasename(args.path) || 'workspace'}` };
+            case 'bash':           return { icon: faTerminal,        label: `Running: ${(args.command || '').slice(0, 60)}` };
+            case 'grep':           return { icon: faMagnifyingGlass, label: `Searching for "${args.pattern || ''}"` };
+            case 'glob':           return { icon: faMagnifyingGlass, label: `Globbing "${args.pattern || ''}"` };
+            case 'web_fetch':      return { icon: faGlobe,           label: `Fetching ${args.url || ''}` };
+            case 'web_search':     return { icon: faMagnifyingGlass, label: `Searching "${args.query || ''}"` };
+            // Legacy / other tools
+            case 'web_browser':    return { icon: faGlobe,           label: `Browsing ${args.url || ''}` };
+            case 'google_search':  return { icon: faMagnifyingGlass, label: `Searching "${args.query || ''}"` };
+            case 'terminal':       return { icon: faTerminal,        label: `Running: ${(args.command || '').slice(0, 60)}` };
+            case 'memory_search':  return { icon: faBrain,           label: `Searching memory for "${args.query || ''}"` };
+            case 'memory_store':   return { icon: faBrain,           label: `Storing memory` };
+            case 'read_file':      return { icon: faEye,             label: `Reading ${getBasename(args.path)}` };
+            case 'write_file':     return { icon: faPen,             label: `Writing ${getBasename(args.path)}` };
+            case 'list_directory': return { icon: faFolder,          label: `Listing ${getBasename(args.path)}` };
+            default:               return { icon: faBoltLightning,   label: displayName || name };
+        }
+    } catch {
+        return { icon: faWrench, label: displayName || name };
+    }
+};
+
+const ToolCallTimeline = ({ tool_calls }) => {
+    if (!tool_calls || tool_calls.length === 0) return null;
+    return (
+        <div className="flex flex-col mb-3 pb-3 border-b border-neutral-500/10">
+            {tool_calls.map((tc, idx) => {
+                const name = tc.function?.name || tc.name || '';
+                const { icon, label } = getToolAction(name, tc.function?.arguments, tc.displayName);
+                return (
+                    <div key={idx} className="flex items-center gap-2 py-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        <FontAwesomeIcon icon={icon} className="w-3 h-3 flex-shrink-0 opacity-60" />
+                        <span className="font-mono truncate">{label}</span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
 
 export const ChatBubble = ({
     role,
@@ -56,6 +120,7 @@ export const ChatBubble = ({
                         )}
                         {(!isReasoning || isVisible) && (
                             <>
+                                <ToolCallTimeline tool_calls={tool_calls} />
                                 <div className="w-full">
                                     <MarkdownRenderer
                                         content={content}
@@ -63,24 +128,6 @@ export const ChatBubble = ({
                                         breaks={!isUser}
                                     />
                                 </div>
-                                {tool_calls && tool_calls.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-neutral-500/10">
-                                        {tool_calls.map((tc, idx) => (
-                                            <Badge key={idx}>
-                                                {tc.pluginType === 'tool' ? (
-                                                    <FontAwesomeIcon icon={faWrench} className="w-3 h-3 mr-1" />
-                                                ) : tc.pluginType === 'skill' && (tc.displayName || tc.function?.name || tc.name)?.toLowerCase().includes('memory') ? (
-                                                    <FontAwesomeIcon icon={faBrain} className="w-3 h-3 mr-1" />
-                                                ) : tc.pluginType === 'skill' ? (
-                                                    <FontAwesomeIcon icon={faBoltLightning} className="w-3 h-3 mr-1" />
-                                                ) : (
-                                                    <><FontAwesomeIcon icon={faBoltLightning} className="w-3 h-3 mr-1" />{tc.pluginType}</>
-                                                )}
-                                                {tc.displayName || tc.function?.name || tc.name}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                )}
                                 {showTokenMetrics && stats && stats.tps !== undefined && stats.tps > 0 && (
                                     <div className="text-secondary flex items-center gap-3 mt-3 pt-2 border-t border-neutral-500/10 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
                                         <span className="flex items-center gap-1">
