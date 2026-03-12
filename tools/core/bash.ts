@@ -28,11 +28,16 @@ export default {
         }
     },
     handler: async ({ command, cwd = '' }: { command: string, cwd?: string }) => {
-        const targetDir = path.resolve(WORKSPACE_DIR, cwd);
+        if (!command || typeof command !== 'string') {
+            return { error: 'Missing required parameter: command must be a non-empty string.' };
+        }
 
-        // Security check - prevent escaping workspace via cd tricks
+        let targetDir = path.resolve(WORKSPACE_DIR, cwd);
+
+        // If cwd resolves outside the workspace (e.g. agent passed an absolute path like /app/workspace),
+        // fall back to the workspace root rather than hard-erroring.
         if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
-            return { error: 'Access denied: Directory is outside of workspace' };
+            targetDir = WORKSPACE_DIR;
         }
 
         try {
