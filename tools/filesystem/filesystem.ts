@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath, WORKSPACE_DIR } from '../lib/workspace.js';
 
 // Ensure workspace exists
 if (!fs.existsSync(WORKSPACE_DIR)) {
@@ -36,10 +35,8 @@ export default {
     },
     handler: async ({ action, path: filePath, newPath }: { action: string; path: string; newPath?: string }) => {
         try {
-            const safePath = path.resolve(WORKSPACE_DIR, filePath);
-            if (safePath !== WORKSPACE_DIR && !safePath.startsWith(WORKSPACE_DIR + path.sep)) {
-                throw new Error('Access denied: Path is outside of workspace');
-            }
+            const { safe: safePath, error } = resolveWorkspacePath(filePath);
+            if (error) throw new Error(error);
 
             switch (action) {
                 case 'delete':
@@ -57,37 +54,31 @@ export default {
                     fs.mkdirSync(safePath, { recursive: true });
                     return { success: true, message: `Directory ${filePath} created successfully` };
 
-                case 'move':
+                case 'move': {
                     if (!fs.existsSync(safePath)) throw new Error('Source path not found');
                     if (!newPath) throw new Error('newPath is required for "move" action');
-                    const destPath = path.resolve(WORKSPACE_DIR, newPath);
-                    if (destPath !== WORKSPACE_DIR && !destPath.startsWith(WORKSPACE_DIR + path.sep)) {
-                        throw new Error('Access denied: Destination is outside of workspace');
-                    }
+                    const { safe: destPath, error: destError } = resolveWorkspacePath(newPath);
+                    if (destError) throw new Error(destError);
                     const destParentDir = path.dirname(destPath);
-                    if (!fs.existsSync(destParentDir)) {
-                        fs.mkdirSync(destParentDir, { recursive: true });
-                    }
+                    if (!fs.existsSync(destParentDir)) fs.mkdirSync(destParentDir, { recursive: true });
                     fs.renameSync(safePath, destPath);
                     return { success: true, message: `Moved ${filePath} to ${newPath}` };
+                }
 
-                case 'copy':
+                case 'copy': {
                     if (!fs.existsSync(safePath)) throw new Error('Source path not found');
                     if (!newPath) throw new Error('newPath is required for "copy" action');
-                    const copyDestPath = path.resolve(WORKSPACE_DIR, newPath);
-                    if (copyDestPath !== WORKSPACE_DIR && !copyDestPath.startsWith(WORKSPACE_DIR + path.sep)) {
-                        throw new Error('Access denied: Destination is outside of workspace');
-                    }
+                    const { safe: copyDestPath, error: copyDestError } = resolveWorkspacePath(newPath);
+                    if (copyDestError) throw new Error(copyDestError);
                     const copyDestParentDir = path.dirname(copyDestPath);
-                    if (!fs.existsSync(copyDestParentDir)) {
-                        fs.mkdirSync(copyDestParentDir, { recursive: true });
-                    }
+                    if (!fs.existsSync(copyDestParentDir)) fs.mkdirSync(copyDestParentDir, { recursive: true });
                     if (fs.statSync(safePath).isDirectory()) {
                         fs.cpSync(safePath, copyDestPath, { recursive: true });
                     } else {
                         fs.copyFileSync(safePath, copyDestPath);
                     }
                     return { success: true, message: `Copied ${filePath} to ${newPath}` };
+                }
 
                 default:
                     throw new Error(`Unknown action: ${action}`);

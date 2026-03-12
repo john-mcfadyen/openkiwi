@@ -1,9 +1,5 @@
-import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath, WORKSPACE_DIR } from '../lib/workspace.js';
+import { execInWorkspace } from '../lib/exec.js';
 
 export default {
     definition: {
@@ -32,30 +28,16 @@ export default {
             return { error: 'Missing required parameter: command must be a non-empty string.' };
         }
 
-        let targetDir = path.resolve(WORKSPACE_DIR, cwd);
+        // Fall back to workspace root if the path escapes the sandbox (e.g. agent passed an absolute path)
+        const { safe } = resolveWorkspacePath(cwd);
+        const targetDir = safe || WORKSPACE_DIR;
 
-        // If cwd resolves outside the workspace (e.g. agent passed an absolute path like /app/workspace),
-        // fall back to the workspace root rather than hard-erroring.
-        if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
-            targetDir = WORKSPACE_DIR;
-        }
+        console.log(`[bash] Executing \`${command}\` in ${targetDir}`);
+        const result = await execInWorkspace(command, targetDir, { timeout: 30_000 });
 
-        try {
-            console.log(`[bash] Executing \`${command}\` in ${targetDir}`);
-            const { stdout, stderr } = await execAsync(command, {
-                cwd: targetDir,
-                timeout: 30000 // 30 sec limit
-            });
-            return {
-                stdout: stdout.trim(),
-                stderr: stderr.trim()
-            };
-        } catch (e: any) {
-            return {
-                error: `Command failed: ${e.message}`,
-                stdout: e.stdout ? e.stdout.toString().trim() : '',
-                stderr: e.stderr ? e.stderr.toString().trim() : ''
-            };
+        if (result.error) {
+            return { error: result.error, stdout: result.stdout, stderr: result.stderr };
         }
+        return { stdout: result.stdout, stderr: result.stderr };
     }
 };

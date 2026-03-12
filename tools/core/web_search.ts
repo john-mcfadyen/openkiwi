@@ -1,4 +1,4 @@
-import webBrowser from '../web_browser/web_browser.js';
+import chromium from '../chromium/chromium.js';
 
 export default {
     definition: {
@@ -27,6 +27,6 @@ export default {
         if (domainFilter) {
             finalQuery = `${query} site:${domainFilter}`;
         }
-        return webBrowser.handler({ action: 'search', input: finalQuery });
+        return chromium.handler({ action: 'search', input: finalQuery });
     }
 };

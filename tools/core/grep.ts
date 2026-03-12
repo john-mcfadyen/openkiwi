@@ -1,10 +1,6 @@
-import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath } from '../lib/workspace.js';
+import { execInWorkspace } from '../lib/exec.js';
 
 export default {
     definition: {
@@ -34,27 +30,19 @@ export default {
         }
     },
     handler: async ({ pattern, directory = '', options = ['-rn'] }: { pattern: string, directory?: string, options?: string[] }) => {
-        const targetDir = path.resolve(WORKSPACE_DIR, directory);
-        if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
-            return { error: 'Access denied: Directory is outside of workspace' };
+        const { safe: targetDir, error } = resolveWorkspacePath(directory);
+        if (error) return { error };
+        if (!fs.existsSync(targetDir)) return { error: `Directory not found: ${directory}` };
+
+        // Only allow simple flags like -i, -n, -r to prevent injection
+        const safeOpts = options.filter(opt => /^-[A-Za-z]+$/.test(opt)).join(' ');
+        const result = await execInWorkspace(`grep ${safeOpts} ${JSON.stringify(pattern)} .`, targetDir, { timeout: 5_000 });
+
+        if (result.error) {
+            if (result.code === 1) return { results: [] }; // grep returns 1 on no match
+            return { error: `Grep failed: ${result.error}` };
         }
-        if (!fs.existsSync(targetDir)) {
-            return { error: `Directory not found: ${directory}` };
-        }
-        try {
-            // Very simple grep injection prevention - only allow expected flags like -i, -n, -r
-            const safeOpts = options.filter(opt => /^-[A-Za-z]+$/.test(opt)).join(' ');
-            const { stdout, stderr } = await execAsync(`grep ${safeOpts} ${JSON.stringify(pattern)} .`, {
-                cwd: targetDir,
-                timeout: 5000 // 5 second timeout to prevent runaway searches
-            });
-            if (stderr) {
-                console.warn('[grep] stderr:', stderr);
-            }
-            return { results: stdout.trim().split('\n').filter(Boolean) };
-        } catch (e: any) {
-            if (e.code === 1) return { results: [] }; // grep returns 1 on no match
-            return { error: `Grep failed: ${e.message}` };
-        }
+        if (result.stderr) console.warn('[grep] stderr:', result.stderr);
+        return { results: result.stdout.split('\n').filter(Boolean) };
     }
 };

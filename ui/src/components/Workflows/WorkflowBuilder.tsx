@@ -10,9 +10,9 @@ import Column from '../Column'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
     faPlus, faTrash, faSave, faEnvelope, faListCheck, faCalendar,
-    faCode, faGlobe, faMagnifyingGlass, faTerminal, faFolder,
+    faCode, faMagnifyingGlass, faTerminal, faFolder,
     faRobot, faDatabase, faCloud, faEye, faChevronRight, faXmark,
-    faBolt, faWrench, faArrowRight
+    faBolt, faWrench, faArrowRight, faShieldHalved, faCodeBranch
 } from '@fortawesome/free-solid-svg-icons'
 
 interface ToolDef {
@@ -29,9 +29,11 @@ const TOOLS: ToolDef[] = [
     { id: 'google_tasks', name: 'Tasks', category: 'Google', icon: faListCheck, color: '#4285F4', description: 'Manage Google Tasks lists' },
     { id: 'google_calendar', name: 'Calendar', category: 'Google', icon: faCalendar, color: '#34A853', description: 'Manage calendar events' },
     { id: 'github', name: 'GitHub', category: 'Dev', icon: faCode, color: '#6e40c9', description: 'Interact with GitHub repos' },
-    { id: 'web_browser', name: 'Browser', category: 'Web', icon: faGlobe, color: '#4A90D9', description: 'Browse and interact with websites' },
+    { id: 'git', name: 'Git', category: 'Dev', icon: faCodeBranch, color: '#F05033', description: 'Run git commands in the workspace' },
+    { id: 'security_scanner', name: 'Security Scanner', category: 'Security', icon: faShieldHalved, color: '#E53E3E', description: 'Run Semgrep, Gitleaks, Bandit, or Trivy' },
     { id: 'web_search', name: 'Web Search', category: 'Web', icon: faMagnifyingGlass, color: '#F5A623', description: 'Search the web' },
     { id: 'web_fetch', name: 'Web Fetch', category: 'Web', icon: faCloud, color: '#7B68EE', description: 'Fetch content from a URL' },
+    { id: 'curl', name: 'Curl', category: 'Web', icon: faCloud, color: '#38A169', description: 'Call JSON APIs and public endpoints directly' },
     { id: 'bash', name: 'Bash', category: 'System', icon: faTerminal, color: '#2D2D2D', description: 'Execute shell commands' },
     { id: 'filesystem', name: 'Filesystem', category: 'System', icon: faFolder, color: '#E8A020', description: 'Read and write files' },
     { id: 'vision', name: 'Vision', category: 'AI', icon: faEye, color: '#9B59B6', description: 'Analyze images with AI' },
@@ -40,7 +42,7 @@ const TOOLS: ToolDef[] = [
     { id: 'weather', name: 'Weather', category: 'Data', icon: faCloud, color: '#3498DB', description: 'Fetch weather data' },
 ]
 
-const TOOL_CATEGORIES = ['Google', 'Web', 'AI', 'Dev', 'System', 'Data']
+const TOOL_CATEGORIES = ['Security', 'Dev', 'Google', 'Web', 'AI', 'System', 'Data']
 
 function getToolDef(id: string): ToolDef {
     return TOOLS.find(t => t.id === id) ?? {
@@ -410,9 +412,9 @@ export default function WorkflowBuilder({ workflow, gatewayAddr, gatewayToken }:
                     backgroundSize: '24px 24px'
                 }}
             >
-                <div className="flex items-center h-full px-8 py-8 min-w-max gap-0">
-                    {nodes.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3 text-center px-20">
+                {nodes.length === 0 ? (
+                    <div className="flex items-center justify-center w-full h-full pb-16">
+                        <div className="flex flex-col items-center gap-3 text-center">
                             <div className="w-14 h-14 rounded-2xl bg-accent-primary/10 text-accent-primary flex items-center justify-center mb-2">
                                 <FontAwesomeIcon icon={faBolt} className="text-2xl" />
                             </div>
@@ -422,7 +424,9 @@ export default function WorkflowBuilder({ workflow, gatewayAddr, gatewayToken }:
                                 Add First Node
                             </Button>
                         </div>
-                    ) : (
+                    </div>
+                ) : (
+                    <div className="flex items-center h-full px-8 py-8 min-w-max gap-0">
                         <>
                             {nodes.map((node, idx) => (
                                 <NodeCard
@@ -445,8 +449,8 @@ export default function WorkflowBuilder({ workflow, gatewayAddr, gatewayToken }:
                                 <FontAwesomeIcon icon={faPlus} className="text-sm" />
                             </button>
                         </>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {/* Config Panel */}

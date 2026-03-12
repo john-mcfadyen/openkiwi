@@ -1,7 +1,5 @@
-import * as path from 'path';
 import * as fs from 'fs';
-
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath } from '../lib/workspace.js';
 
 export default {
     definition: {
@@ -22,13 +20,9 @@ export default {
         }
     },
     handler: async ({ path: filePath }: { path: string }) => {
-        const safePath = path.resolve(WORKSPACE_DIR, filePath);
-        if (safePath !== WORKSPACE_DIR && !safePath.startsWith(WORKSPACE_DIR + path.sep)) {
-            return { error: 'Access denied: File is outside of workspace' };
-        }
-        if (!fs.existsSync(safePath)) {
-            return { error: `File not found: ${filePath}` };
-        }
+        const { safe: safePath, error } = resolveWorkspacePath(filePath);
+        if (error) return { error };
+        if (!fs.existsSync(safePath)) return { error: `File not found: ${filePath}` };
         try {
             return { content: fs.readFileSync(safePath, 'utf-8') };
         } catch (e: any) {

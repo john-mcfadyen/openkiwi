@@ -30,9 +30,12 @@ export default function Settings_Tools({
         'memory_search', 'memory_get', 'save_to_memory',
     ]);
 
-    const coreTools = tools.filter(t => !MEMORY_TOOL_NAMES.has(t.name) && (!t.filename || CORE_TOOL_NAMES.has(t.name)));
+    // Internal-only tools: used as libraries by other tools, not exposed directly to agents
+    const isInternalTool = t => t.name === 'chromium' || (t.filename && t.filename.includes('chromium'));
+
+    const coreTools = tools.filter(t => !isInternalTool(t) && !MEMORY_TOOL_NAMES.has(t.name) && (!t.filename || CORE_TOOL_NAMES.has(t.name)));
     const memoryTools = tools.filter(t => MEMORY_TOOL_NAMES.has(t.name));
-    const optionalTools = tools.filter(t => !!t.filename && !CORE_TOOL_NAMES.has(t.name) && !MEMORY_TOOL_NAMES.has(t.name));
+    const optionalTools = tools.filter(t => !isInternalTool(t) && !!t.filename && !CORE_TOOL_NAMES.has(t.name) && !MEMORY_TOOL_NAMES.has(t.name));
     const visibleTools = activeTab === 'core' ? coreTools : activeTab === 'memory' ? memoryTools : optionalTools;
 
     return (
@@ -40,7 +43,7 @@ export default function Settings_Tools({
             <Column>
                 <SectionHeader
                     icon={faWrench}
-                    title="Skills & Tools"
+                    title="Tools"
                 />
                 <Text secondary={true} size="sm" block={true}>
                     These are the capabilities currently discovered by the Gateway. Agents can autonomously choose to use these tools to interact with your environment.

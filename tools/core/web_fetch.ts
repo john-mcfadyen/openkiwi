@@ -1,4 +1,4 @@
-import webBrowser from '../web_browser/web_browser.js';
+import chromium from '../chromium/chromium.js';
 
 export default {
     definition: {
@@ -19,6 +19,6 @@ export default {
         }
     },
     handler: async ({ url }: { url: string }) => {
-        return webBrowser.handler({ action: 'browse', input: url });
+        return chromium.handler({ action: 'browse', input: url });
     }
 };

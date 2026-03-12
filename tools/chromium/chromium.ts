@@ -30,8 +30,8 @@ if (!fs.existsSync(SCREENSHOTS_DIR)) {
 
 export default {
     definition: {
-        name: 'web_browser',
-        displayName: 'Web Browser',
+        name: 'chromium',
+        displayName: 'Chromium',
         pluginType: 'tool',
         description: 'Perform web searches, image searches, or browse specific URLs. Returns text content, a screenshot URL, and for "search_images", a list of image_results. You MUST display the screenshot in your response using Markdown image syntax (e.g. ![Screenshot](url)).',
         parameters: {
@@ -109,11 +109,11 @@ export default {
                     throw new Error(`Access to IP ${lookupInfo.address} is restricted.`);
                 }
             } catch (validationError: any) {
-                console.error(`[Browser] URL Validation Failed: ${validationError.message}`);
+                console.error(`[Chromium] URL Validation Failed: ${validationError.message}`);
                 return { error: `URL Validation Failed: ${validationError.message}` };
             }
 
-            console.log(`[Browser] Visiting: ${urlToVisit}`);
+            console.log(`[Chromium] Visiting: ${urlToVisit}`);
 
             // Navigate with a more robust strategy
             const response = await page.goto(urlToVisit, {
@@ -149,7 +149,7 @@ export default {
             try {
                 await page.waitForNetworkIdle({ timeout: 4000 });
             } catch (e) {
-                console.log(`[Browser] Network didn't settle within 4s, proceeding.`);
+                console.log(`[Chromium] Network didn't settle within 4s, proceeding.`);
             }
 
             if (!response) {
@@ -157,7 +157,7 @@ export default {
             }
 
             if (!response.ok()) {
-                console.warn(`[Browser] Page responded with status ${response.status()}`);
+                console.warn(`[Chromium] Page responded with status ${response.status()}`);
             }
 
             // Take Screenshot
@@ -212,12 +212,12 @@ export default {
                             .slice(0, 5);
                     });
 
-                    console.log(`[Browser] Found ${resultLinks.length} potential image source pages`);
+                    console.log(`[Chromium] Found ${resultLinks.length} potential image source pages`);
 
                     if (resultLinks.length > 0) {
                         // Pick a random result
                         const targetUrl = resultLinks[Math.floor(Math.random() * resultLinks.length)];
-                        console.log(`[Browser] Navigating to ${targetUrl}`);
+                        console.log(`[Chromium] Navigating to ${targetUrl}`);
 
                         // Navigate to the result page
                         await page.goto(targetUrl, {
@@ -253,10 +253,10 @@ export default {
                                 }));
                         });
 
-                        console.log(`[Browser] Extracted ${imageResults.length} images from result page`);
+                        console.log(`[Chromium] Extracted ${imageResults.length} images from result page`);
                     }
                 } catch (e: any) {
-                    console.error(`[Browser] Error extracting images: ${e.message}`);
+                    console.error(`[Chromium] Error extracting images: ${e.message}`);
                 }
 
                 // Fallback to screenshot if still no images
@@ -267,13 +267,11 @@ export default {
                         url: screenshotUrl
                     });
                 }
-                console.log(`[Browser] Found ${imageResults.length} images for search_images`);
+                console.log(`[Chromium] Found ${imageResults.length} images for search_images`);
             }
 
             const screenshotUrl = `/screenshots/${filename}`;
             const pageTitle = await page.title();
-
-            // Normally close page in finally block
 
             const result: any = {
                 title: pageTitle,
@@ -292,16 +290,15 @@ export default {
             return result;
 
         } catch (error: any) {
-            console.error('[Browser] Error during execution:', error);
+            console.error('[Chromium] Error during execution:', error);
             return { error: `Browser error: ${error.message}` };
         } finally {
             if (page) {
                 try {
                     await page.close();
                 } catch (e: any) {
-                    // Start of the error that user reported
                     if (!e.message.includes('No target with given id found')) {
-                        console.error('[Browser] Error closing page:', e);
+                        console.error('[Chromium] Error closing page:', e);
                     }
                 }
             }

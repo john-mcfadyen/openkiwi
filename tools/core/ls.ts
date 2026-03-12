@@ -1,7 +1,5 @@
-import * as path from 'path';
 import * as fs from 'fs';
-
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath } from '../lib/workspace.js';
 
 export default {
     definition: {
@@ -21,17 +19,10 @@ export default {
         }
     },
     handler: async ({ path: dirPath = '' }: { path?: string }) => {
-        const targetDir = path.resolve(WORKSPACE_DIR, dirPath);
-
-        if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
-            return { error: 'Access denied: Directory is outside of workspace' };
-        }
-        if (!fs.existsSync(targetDir)) {
-            return { error: `Directory not found: ${dirPath}` };
-        }
-        if (!fs.statSync(targetDir).isDirectory()) {
-            return { error: `Target is not a directory: ${dirPath}` };
-        }
+        const { safe: targetDir, error } = resolveWorkspacePath(dirPath);
+        if (error) return { error };
+        if (!fs.existsSync(targetDir)) return { error: `Directory not found: ${dirPath}` };
+        if (!fs.statSync(targetDir).isDirectory()) return { error: `Target is not a directory: ${dirPath}` };
         try {
             const results = fs.readdirSync(targetDir, { withFileTypes: true });
             return {

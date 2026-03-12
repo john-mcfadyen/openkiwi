@@ -8,7 +8,7 @@ import { AgentManager } from './agent-manager.js';
 
 function getToolDetails(name: string, args: any): string {
     switch (name) {
-        case 'web_browser':
+        case 'chromium':
             return `Browsing ${args.url || 'web'}...`;
         case 'google_search':
             return `Searching Google for "${args.query}"...`;

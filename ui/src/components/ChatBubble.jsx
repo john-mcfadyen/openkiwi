@@ -38,7 +38,7 @@ const getToolAction = (name, argsStr, displayName) => {
             case 'web_fetch':      return { icon: faGlobe,           label: `Fetching ${args.url || ''}` };
             case 'web_search':     return { icon: faMagnifyingGlass, label: `Searching "${args.query || ''}"` };
             // Legacy / other tools
-            case 'web_browser':    return { icon: faGlobe,           label: `Browsing ${args.url || ''}` };
+            case 'chromium':       return { icon: faGlobe,           label: `Browsing ${args.url || ''}` };
             case 'google_search':  return { icon: faMagnifyingGlass, label: `Searching "${args.query || ''}"` };
             case 'terminal':       return { icon: faTerminal,        label: `Running: ${(args.command || '').slice(0, 60)}` };
             case 'memory_search':  return { icon: faBrain,           label: `Searching memory for "${args.query || ''}"` };

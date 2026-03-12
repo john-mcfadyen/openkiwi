@@ -1,10 +1,6 @@
-import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-const WORKSPACE_DIR = path.resolve(process.cwd(), 'workspace');
+import { resolveWorkspacePath } from '../lib/workspace.js';
+import { execInWorkspace } from '../lib/exec.js';
 
 export default {
     definition: {
@@ -29,27 +25,19 @@ export default {
         }
     },
     handler: async ({ pattern, path: searchPath = '' }: { pattern: string, path?: string }) => {
-        const targetDir = path.resolve(WORKSPACE_DIR, searchPath);
-        if (targetDir !== WORKSPACE_DIR && !targetDir.startsWith(WORKSPACE_DIR + path.sep)) {
-            return { error: 'Access denied: Directory is outside of workspace' };
+        const { safe: targetDir, error } = resolveWorkspacePath(searchPath);
+        if (error) return { error };
+        if (!fs.existsSync(targetDir)) return { error: `Directory not found: ${searchPath}` };
+
+        // Escape single quotes for shell safety
+        const safePattern = pattern.replace(/'/g, "'\\''");
+        const result = await execInWorkspace(`find . -name '${safePattern}'`, targetDir, { timeout: 5_000 });
+
+        if (result.error) {
+            if (result.code === 1) return { files: [] }; // find returns 1 on empty/no match on some platforms
+            return { error: `Glob failed: ${result.error}` };
         }
-        if (!fs.existsSync(targetDir)) {
-            return { error: `Directory not found: ${searchPath}` };
-        }
-        try {
-            // Very simple find wrapper since node lacks native glob unless using external libraries
-            // and we want this script to be zero-config.
-            // Escape single quotes for shell safety
-            const safePattern = pattern.replace(/'/g, "'\\''");
-            const { stdout, stderr } = await execAsync(`find . -name '${safePattern}'`, {
-                cwd: targetDir,
-                timeout: 5000
-            });
-            if (stderr) console.warn('[glob] stderr:', stderr);
-            return { files: stdout.trim().split('\n').filter(Boolean) };
-        } catch (e: any) {
-            if (e.code === 1) return { files: [] }; // find can return 1 if directory is empty or nothing found depending on platform
-            return { error: `Glob failed: ${e.message}` };
-        }
+        if (result.stderr) console.warn('[glob] stderr:', result.stderr);
+        return { files: result.stdout.split('\n').filter(Boolean) };
     }
 };
