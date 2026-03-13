@@ -309,7 +309,7 @@ export default function WorkspacePage({ gatewayAddr, gatewayToken }: WorkspacePa
                         <FontAwesomeIcon icon={faRotateRight} className={`text-sm ${loadingRoot ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto py-2 px-1 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto py-2 px-1">
                     {loadingRoot ? (
                         <div className="flex items-center justify-center p-8 text-secondary gap-2">
                             <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
@@ -344,7 +344,7 @@ export default function WorkspacePage({ gatewayAddr, gatewayToken }: WorkspacePa
                         <Text size="sm" secondary={true} className="font-mono">{selectedFile.path}</Text>
                     </div>
                 )}
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto">
                     {renderFileContent()}
                 </div>
             </div>

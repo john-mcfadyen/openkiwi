@@ -60,7 +60,7 @@ const LogDetailModal = ({ log, onClose }: { log: LogEntry; onClose: () => void }
                         ✕
                     </button>
                 </div>
-                <div className="px-6 py-4 overflow-y-auto custom-scrollbar space-y-4">
+                <div className="px-6 py-4 overflow-y-auto space-y-4">
                     <div>
                         <Text size="xs" bold className="uppercase tracking-wider text-neutral-500 mb-1">Message</Text>
                         <Column><Text size="sm">{log.message}</Text></Column>
@@ -134,7 +134,7 @@ export default function LogsPage({ logs, onClear }: LogsPageProps) {
                     </thead>
                 </table>
                 {/* Body — only this part scrolls */}
-                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                     <table className="table-fixed w-full" style={{ backgroundColor: 'var(--table-body-bg)' }}>
                         <colgroup>
                             <col className="w-28" />

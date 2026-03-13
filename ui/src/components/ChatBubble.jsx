@@ -172,11 +172,14 @@ export const ChatBubble = ({
                             <>
                                 <ToolCallTimeline tool_calls={tool_calls} />
                                 <div className="w-full">
-                                    <MarkdownRenderer
-                                        content={content}
-                                        className={isUser ? 'prose-invert whitespace-pre-wrap' : ''}
-                                        breaks={!isUser}
-                                    />
+                                    {isUser ? (
+                                        <div className="whitespace-pre-wrap text-[15px] leading-relaxed select-text">{content}</div>
+                                    ) : (
+                                        <MarkdownRenderer
+                                            content={content}
+                                            breaks={true}
+                                        />
+                                    )}
                                 </div>
                                 {showTokenMetrics && stats && stats.tps !== undefined && stats.tps > 0 && (
                                     <div className="text-secondary flex items-center gap-3 mt-3 pt-2 border-t border-neutral-500/10 text-[10px] font-bold uppercase tracking-widest text-neutral-400">

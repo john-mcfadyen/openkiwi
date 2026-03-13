@@ -21,10 +21,12 @@ import Sidebar from './components/Sidebar'
 import {
   faPlus,
   faSave,
-  faEdit
+  faEdit,
+  faSearch
 } from '@fortawesome/free-solid-svg-icons'
 import SessionButton from './components/SessionButton'
 import SessionGroup from './components/SessionGroup'
+import Input from './components/Input'
 import { Message, Agent, Session, Model, Config, AgentState } from './types';
 
 interface LogEntry {
@@ -91,6 +93,7 @@ function App() {
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [sessionSearch, setSessionSearch] = useState('');
   const [tools, setTools] = useState<ToolDefinition[]>([]);
   const [connectedClients, setConnectedClients] = useState<any[]>([]);
   const [agentStates, setAgentStates] = useState<Record<string, AgentState>>({});
@@ -1123,7 +1126,7 @@ function App() {
         {/* Secondary Sidebar (Chat Sessions) */}
         {activeView === 'chat' && (
           <nav className="w-72 bg-sidebar border-r border-divider flex flex-col z-50 transition-all duration-300">
-            <div className="p-5">
+            <div className="p-5 pb-3 flex flex-col gap-3">
               <Button
                 className="w-full"
                 themed={true}
@@ -1133,32 +1136,51 @@ function App() {
               >
                 New Chat
               </Button>
+              <Input
+                placeholder="Search"
+                currentText={sessionSearch}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionSearch(e.target.value)}
+                icon={faSearch}
+                clearText={() => setSessionSearch('')}
+              />
             </div>
 
-            <div className="flex-1 overflow-y-auto px-3 space-y-1 py-2 custom-scrollbar">
-              {agents.map(agent => (
-                <SessionGroup
-                  key={agent.id}
-                  agent={agent}
-                  sessions={sessions.filter(s => s.agentId === agent.id)}
-                  activeSessionId={activeSessionId}
-                  onLoadSession={loadSession}
-                  onDeleteSession={deleteSession}
-                  formatTimestamp={formatTimestamp}
-                />
-              ))}
-              {/* Orphaned sessions */}
-              {sessions.filter(s => !agents.find(a => a.id === s.agentId)).map(s => (
-                <SessionButton
-                  key={s.id}
-                  session={s}
-                  isActive={activeSessionId === s.id}
-                  agent={undefined}
-                  onLoadSession={loadSession}
-                  onDeleteSession={deleteSession}
-                  formatTimestamp={formatTimestamp}
-                />
-              ))}
+            <div className="flex-1 overflow-y-auto px-3 space-y-1 py-2">
+              {(() => {
+                const query = sessionSearch.toLowerCase().trim();
+                const matchesQuery = (s: Session) =>
+                  !query ||
+                  (s.title || '').toLowerCase().includes(query) ||
+                  (s.summary || '').toLowerCase().includes(query);
+                return (
+                  <>
+                    {agents.map(agent => (
+                      <SessionGroup
+                        key={agent.id}
+                        agent={agent}
+                        sessions={sessions.filter(s => s.agentId === agent.id && matchesQuery(s))}
+                        activeSessionId={activeSessionId}
+                        onLoadSession={loadSession}
+                        onDeleteSession={deleteSession}
+                        formatTimestamp={formatTimestamp}
+                        forceExpanded={!!query}
+                      />
+                    ))}
+                    {/* Orphaned sessions */}
+                    {sessions.filter(s => !agents.find(a => a.id === s.agentId) && matchesQuery(s)).map(s => (
+                      <SessionButton
+                        key={s.id}
+                        session={s}
+                        isActive={activeSessionId === s.id}
+                        agent={undefined}
+                        onLoadSession={loadSession}
+                        onDeleteSession={deleteSession}
+                        formatTimestamp={formatTimestamp}
+                      />
+                    ))}
+                  </>
+                );
+              })()}
             </div>
           </nav>
         )}

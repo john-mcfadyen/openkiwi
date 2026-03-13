@@ -174,7 +174,7 @@ export default function ProjectsPage({ gatewayAddr, gatewayToken }: ProjectsPage
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl h-[calc(100vh-12rem)] min-h-[500px]">
                 {/* Left Column - Projects List */}
                 <div className="lg:col-span-4 space-y-4">
-                    <Card padding="p-4" className="space-y-1 h-full overflow-y-auto custom-scrollbar">
+                    <Card padding="p-4" className="space-y-1 h-full overflow-y-auto">
                         {projects.length === 0 ? (
                             <div className="px-4 py-8 text-center flex flex-col items-center gap-3">
                                 <FontAwesomeIcon icon={faFolder} className="text-4xl text-neutral-300 dark:text-neutral-700" />
@@ -251,14 +251,14 @@ export default function ProjectsPage({ gatewayAddr, gatewayToken }: ProjectsPage
                                         <div className="flex-1 overflow-y-auto w-full relative">
                                             {isEditing ? (
                                                 <textarea
-                                                    className="absolute inset-0 w-full h-full p-6 bg-transparent resize-none focus:outline-none font-mono text-sm custom-scrollbar text-neutral-800 dark:text-neutral-200"
+                                                    className="absolute inset-0 w-full h-full p-6 bg-transparent resize-none focus:outline-none font-mono text-sm text-neutral-800 dark:text-neutral-200"
                                                     value={fileContent}
                                                     onChange={e => setFileContent(e.target.value)}
                                                     placeholder="Write your markdown here..."
                                                     spellCheck={false}
                                                 />
                                             ) : (
-                                                <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+                                                <div className="p-6 h-full overflow-y-auto">
                                                     {fileContent ? (
                                                         <MarkdownRenderer content={fileContent} />
                                                     ) : (
