@@ -19,7 +19,7 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.get('/:name', (req: Request, res: Response) => {
-    const skillName = req.params.name;
+    const skillName = req.params.name as string;
     const skillMdPath = path.join(SKILLS_DIR, skillName, 'SKILL.md');
     if (!fs.existsSync(skillMdPath)) {
         return res.status(404).json({ error: 'Skill not found.' });
