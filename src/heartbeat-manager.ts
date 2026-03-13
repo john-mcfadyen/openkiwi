@@ -151,7 +151,7 @@ export class HeartbeatManager {
 
             const now = new Date();
             const currentTimestampUTC = now.toISOString();
-            const currentTimestampLocal = now.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, dateStyle: 'full', timeStyle: 'long' });
+            const currentTimestampLocal = now.toLocaleString(undefined, { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, dateStyle: 'full', timeStyle: 'long' });
 
             const messages: { role: string; content: string | null; tool_calls?: any[]; tool_call_id?: string; name?: string }[] = [
                 { role: 'system', content: agent.systemPrompt },
@@ -178,7 +178,7 @@ Please execute these instructions now.
                 sessionId: 'heartbeat',
                 llmConfig,
                 messages: messages,
-                maxLoops: 10,
+                maxLoops: agent.heartbeat?.maxLoops || 10,
                 signToolUrls: false,
                 agentToolsConfig: agent.tools
             });
@@ -298,7 +298,7 @@ Please execute these instructions now.
 
             const now = new Date();
             const currentTimestampUTC = now.toISOString();
-            const currentTimestampLocal = now.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, dateStyle: 'full', timeStyle: 'long' });
+            const currentTimestampLocal = now.toLocaleString(undefined, { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, dateStyle: 'full', timeStyle: 'long' });
 
             const messages: { role: string; content: string | null; tool_calls?: any[]; tool_call_id?: string; name?: string }[] = [
                 { role: 'system', content: agent.systemPrompt },
