@@ -7,7 +7,7 @@ export default {
         name: 'agent',
         displayName: 'Sub-Agent Delegation',
         pluginType: 'tool',
-        description: 'Runs a sub-agent to handle complex, multi-step tasks autonomously. Returns the final response from the sub-agent.',
+        description: 'Delegates a task to a DIFFERENT named agent. Only use this to hand off work to a specific other agent by ID — do NOT use this to execute your own current task or when you already have the tools needed.',
         requiresApproval: false,
         parameters: {
             type: 'object',
@@ -25,6 +25,10 @@ export default {
         }
     },
     handler: async ({ agentId, task, _context }: { agentId: string, task: string, _context?: any }) => {
+        if (!agentId || !task) {
+            return { error: 'Both agentId and task are required.' };
+        }
+
         const agent = AgentManager.getAgent(agentId);
         if (!agent) {
             return { error: `Agent not found: ${agentId}. Available agents: ${AgentManager.listAgents().join(', ')}` };

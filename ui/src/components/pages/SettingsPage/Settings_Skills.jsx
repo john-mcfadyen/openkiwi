@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { faGear, faPlus, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import JSZip from 'jszip'
-import SectionHeader from '../../SectionHeader'
 import Text from '../../Text'
 import Column from '../../Column'
 import Button from '../../Button'
 import Modal from '../../Modal'
+import MarkdownRenderer from '../../MarkdownRenderer'
+import Page from '../Page'
 import { toast } from 'sonner'
 
 function parseFrontmatter(content) {
@@ -211,6 +212,7 @@ export default function Settings_Skills({ gatewayAddr, gatewayToken }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modalOpen, setModalOpen] = useState(false)
+    const [viewingSkill, setViewingSkill] = useState(null) // { name, content }
 
     const fetchSkills = useCallback(() => {
         setLoading(true)
@@ -224,17 +226,43 @@ export default function Settings_Skills({ gatewayAddr, gatewayToken }) {
 
     useEffect(() => { fetchSkills() }, [fetchSkills])
 
+    const openSkill = useCallback(async (skill) => {
+        try {
+            const res = await fetch(`${gatewayAddr}/api/skills/${encodeURIComponent(skill.name)}`, {
+                headers: gatewayToken ? { Authorization: `Bearer ${gatewayToken}` } : {}
+            })
+            if (!res.ok) throw new Error(`Server returned ${res.status}`)
+            const data = await res.json()
+            setViewingSkill({ name: skill.name, content: data.content })
+        } catch (err) {
+            toast.error('Failed to load skill: ' + err.message)
+        }
+    }, [gatewayAddr, gatewayToken])
+
+    const installButton = (
+        <Button themed={true} icon={faPlus} onClick={() => setModalOpen(true)}>
+            Install Skill
+        </Button>
+    )
+
     return (
-        <>
+        <Page
+            title="Skills"
+            subtitle="Skills extend what agents can do. Each skill provides a set of instructions and optional scripts that agents activate on demand."
+            headerAction={installButton}
+        >
             <Column>
-                <div className="flex items-center justify-between">
-                    <SectionHeader icon={faGear} title="Agent Skills" />
-                    <Button size="sm" icon={faPlus} onClick={() => setModalOpen(true)}>
-                        Install Skill
-                    </Button>
-                </div>
-                <Text secondary={true} size="sm" block={true}>
-                    Skills extend what agents can do. Each skill provides a set of instructions and optional scripts that agents activate on demand.
+
+                <Text secondary={true} size="sm">
+                    Find more skills at{' '}
+                    <a
+                        href="https://skillsmp.com/search"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent-primary hover:underline"
+                    >
+                        skillsmp.com/search
+                    </a>
                 </Text>
 
                 {loading && <Text secondary={true} size="sm">Loading skills...</Text>}
@@ -252,19 +280,23 @@ export default function Settings_Skills({ gatewayAddr, gatewayToken }) {
                 {!loading && !error && skills.length > 0 && (
                     <div className="mt-4 flex flex-col gap-3">
                         {skills.map(skill => (
-                            <div key={skill.name} className="p-4 rounded-xl border border-divider bg-card">
+                            <button
+                                key={skill.name}
+                                onClick={() => openSkill(skill)}
+                                className="p-4 rounded-xl border border-divider bg-card text-left hover:border-accent-primary/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors w-full"
+                            >
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <Text bold={true} size="sm">{skill.name}</Text>
-                                        <Text secondary={true} size="sm" block={true} className="mt-1">
+                                        <div className="mt-1 text-sm text-secondary line-clamp-2">
                                             {skill.description}
-                                        </Text>
+                                        </div>
                                     </div>
                                     <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-accent-primary/10 text-accent-primary font-mono">
                                         active
                                     </span>
                                 </div>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 )}
@@ -277,6 +309,16 @@ export default function Settings_Skills({ gatewayAddr, gatewayToken }) {
                 gatewayToken={gatewayToken}
                 onInstalled={fetchSkills}
             />
-        </>
+
+            <Modal
+                isOpen={!!viewingSkill}
+                onClose={() => setViewingSkill(null)}
+                title={viewingSkill?.name}
+            >
+                <div className="p-6 overflow-y-auto max-h-[70vh]">
+                    <MarkdownRenderer content={viewingSkill?.content || ''} />
+                </div>
+            </Modal>
+        </Page>
     )
 }

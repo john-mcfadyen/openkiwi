@@ -16,6 +16,7 @@ import ActivityPage from './components/pages/ActivityPage'
 import WorkflowsPage from './components/pages/WorkflowsPage'
 import ProjectsPage from './components/pages/ProjectsPage'
 import WorkspacePage from './components/pages/WorkspacePage'
+import SkillsPage from './components/pages/SettingsPage/Settings_Skills'
 import Sidebar from './components/Sidebar'
 import {
   faPlus,
@@ -1234,6 +1235,8 @@ function App() {
             <ProjectsPage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
           ) : activeView === 'files' ? (
             <WorkspacePage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
+          ) : activeView === 'skills' ? (
+            <SkillsPage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
           ) : (
             <SettingsPage
               activeSettingsSection={activeSettingsSection}

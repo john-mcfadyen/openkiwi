@@ -1,6 +1,10 @@
 import path from 'node:path';
 import { SkillManager } from '../skill-manager.js';
 
+// Tracks activated skills per session to prevent duplicate context injection.
+// Key: `${sessionId}:${skillName}`
+const activatedSkills = new Set<string>();
+
 export const activate_skill = {
     definition: {
         name: 'activate_skill',
@@ -18,7 +22,20 @@ export const activate_skill = {
             required: ['skillName']
         }
     },
-    handler: async ({ skillName }: { skillName: string }) => {
+    handler: async ({ skillName, _context }: { skillName: string, _context?: any }) => {
+        if (!skillName) {
+            return { error: 'skillName is required.' };
+        }
+
+        const dedupKey = `${_context?.sessionId ?? _context?.agentId ?? 'unknown'}:${skillName}`;
+        if (activatedSkills.has(dedupKey)) {
+            return {
+                status: 'already_active',
+                message: `Skill '${skillName}' is already loaded. Do not call activate_skill again — proceed directly with executing the skill instructions you already received.`
+            };
+        }
+        activatedSkills.add(dedupKey);
+
         const content = SkillManager.getSkillContent(skillName);
         if (!content) {
             const available = SkillManager.getSkillDefinitions().map(s => s.name);
@@ -33,15 +50,26 @@ export const activate_skill = {
             ? content.metadata['allowed-tools'].split(/\s+/).filter(Boolean)
             : [];
 
+        const scriptsPath = content.scriptFiles.length > 0
+            ? path.join(skillDef.skillPath, 'scripts')
+            : null;
+
+        // Replace common portable path placeholders with the real path on this system
+        let instructions = content.body;
+        if (scriptsPath) {
+            instructions = instructions.replace(
+                new RegExp(`~/.claude/skills/${skillName}/scripts`, 'g'),
+                scriptsPath
+            );
+        }
+
         return {
             name: content.metadata.name,
             description: content.metadata.description,
-            instructions: content.body,
+            instructions,
             allowed_tools: allowedTools.length > 0 ? allowedTools : undefined,
             available_scripts: content.scriptFiles,
-            scripts_path: content.scriptFiles.length > 0
-                ? path.join(skillDef.skillPath, 'scripts')
-                : null,
+            scripts_path: scriptsPath,
             available_references: content.referenceFiles,
             available_assets: content.assetFiles
         };

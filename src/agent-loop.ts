@@ -297,7 +297,7 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
                     const toolStartTime = Date.now();
                     let toolSucceeded = false;
                     try {
-                        result = await ToolManager.callTool(name, args, { agentId: options.agentId, toolConfig, abortSignal: options.abortSignal });
+                        result = await ToolManager.callTool(name, args, { agentId: options.agentId, sessionId: options.sessionId, toolConfig, abortSignal: options.abortSignal });
                         toolSucceeded = true;
                     } finally {
                         AgentManager.setAgentState(options.agentId, prevState.status, prevState.details);

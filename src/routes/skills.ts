@@ -18,6 +18,16 @@ router.get('/', (req: Request, res: Response) => {
     res.json({ skills });
 });
 
+router.get('/:name', (req: Request, res: Response) => {
+    const skillName = req.params.name;
+    const skillMdPath = path.join(SKILLS_DIR, skillName, 'SKILL.md');
+    if (!fs.existsSync(skillMdPath)) {
+        return res.status(404).json({ error: 'Skill not found.' });
+    }
+    const content = fs.readFileSync(skillMdPath, 'utf-8');
+    res.json({ content });
+});
+
 router.post('/install', upload.single('skill'), async (req: Request, res: Response) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
