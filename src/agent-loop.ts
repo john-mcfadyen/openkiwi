@@ -210,7 +210,19 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
 
             for (const toolCall of actualToolCalls) {
                 const name = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments || '{}');
+                let args: Record<string, unknown>;
+                try {
+                    args = JSON.parse(toolCall.function.arguments || '{}');
+                } catch (parseError) {
+                    logger.log({ type: 'error', level: 'warn', agentId: options.agentId, sessionId: options.sessionId, message: `Skipping tool call '${name}': malformed JSON arguments`, data: { raw: toolCall.function.arguments?.substring(0, 200) } });
+                    chatHistory.push({
+                        role: 'tool',
+                        tool_call_id: toolCall.id,
+                        content: `Error: Could not parse tool arguments — the JSON was truncated or malformed. Please retry the tool call with valid JSON.`,
+                        timestamp: Math.floor(Date.now() / 1000)
+                    });
+                    continue;
+                }
 
                 try {
                     if (options.onToolCall) {
