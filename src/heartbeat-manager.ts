@@ -327,7 +327,7 @@ You have been woken up to work on the Agent Collaboration System.
                 sessionId: 'collaboration',
                 llmConfig,
                 messages: messages,
-                maxLoops: 10,
+                maxLoops: agent.heartbeat?.maxLoops || 10,
                 signToolUrls: false
             });
 
