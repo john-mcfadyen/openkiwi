@@ -125,7 +125,7 @@ ${hasPersona ? persona : identity}
 ${rules}
 ${hasPersona ? '' : '\n' + soul}
 
-${memory || 'Your memory is currently empty.'}
+Your long-term memory is stored externally. Use the \`memory_search\` tool to recall facts about the user, their preferences, or past conversations. Whenever the user shares something worth remembering in a future session — personal facts (name, location, job, family), preferences ("I prefer A over B"), project context ("I'm building X for reason Y"), or explicit corrections — you MUST call \`save_to_memory\` in that same response turn, before or alongside your reply. Never say "I'll remember that" without actually calling the tool. Only save information that is specific and durable — skip passing remarks or anything already in memory. Keep each memory entry concise.
 
 ${collaborationPrompt}
 
