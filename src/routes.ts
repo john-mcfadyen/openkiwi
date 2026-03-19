@@ -9,6 +9,8 @@ import systemRouter from './routes/system.js';
 import filesRouter from './routes/files.js';
 import collaborationRouter from './routes/collaboration.js';
 import projectsRouter from './routes/projects.js';
+import conversationsRouter from './routes/conversations.js';
+import campaignsRouter from './routes/campaigns.js';
 import { TelegramManager } from './telegram-manager.js';
 
 const router = Router();
@@ -30,6 +32,8 @@ router.use('/tools', toolsRouter);
 router.use('/system', systemRouter);
 router.use('/collaboration', collaborationRouter);
 router.use('/projects', projectsRouter);
+router.use('/conversations', conversationsRouter);
+router.use('/campaigns', campaignsRouter);
 
 // Telegram routes
 router.get('/telegram/status', (req, res) => {
