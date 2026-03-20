@@ -8,22 +8,50 @@ import { AgentManager } from './agent-manager.js';
 
 function getToolDetails(name: string, args: any): string {
     switch (name) {
+        // Core filesystem tools
+        case 'read':
+            return `Reading ${args.path}...`;
+        case 'write':
+            return `Writing ${args.path}...`;
+        case 'edit':
+        case 'multi_edit':
+            return `Editing ${args.path}...`;
+        case 'ls':
+            return `Listing ${args.path || 'directory'}...`;
+        case 'glob':
+            return `Searching for ${args.pattern}...`;
+        case 'grep':
+            return `Searching for "${args.pattern}"...`;
+        case 'file_manager':
+            return `${args.action ? args.action.charAt(0).toUpperCase() + args.action.slice(1) : 'Operating on'} ${args.path}...`;
+        // Core system tools
+        case 'bash':
+            return `Running command...`;
+        case 'web_fetch':
+            return `Fetching ${args.url || 'URL'}...`;
+        case 'web_search':
+            return `Searching for "${args.query}"...`;
+        // Plugin tools
         case 'chromium':
             return `Browsing ${args.url || 'web'}...`;
-        case 'google_search':
-            return `Searching Google for "${args.query}"...`;
-        case 'read_file':
-            return `Reading file ${args.path}...`;
-        case 'write_file':
-            return `Writing to file ${args.path}...`;
-        case 'list_directory':
-            return `Scanning directory ${args.path}...`;
-        case 'terminal':
-            return `Running command...`;
+        case 'git':
+            return `Running git ${args.args?.split(' ')[0] || 'command'}...`;
+        case 'security_scanner':
+            return `Running ${args.scanner || 'security'} scan...`;
+        case 'report_writer':
+            return `Writing report to ${args.output_path || 'workspace'}...`;
+        case 'curl':
+            return `Calling ${args.url || 'API'}...`;
+        case 'describe_image':
+            return `Analyzing image...`;
         case 'memory_search':
             return `Searching memory for "${args.query}"...`;
         case 'memory_store':
             return `Storing memory...`;
+        case 'ask_user':
+            return `Asking for input...`;
+        case 'finish_task':
+            return `Finishing task...`;
         default:
             return `Using tool ${name}...`;
     }
@@ -319,7 +347,17 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
                             break; // Do NOT push a tool result yet. Wait for human.
                         } else if (result.__STOP__) {
                             toolLoop = false;
+                            const stopSummary = result.summary as string | undefined;
                             delete result.__STOP__;
+                            // Surface the finish_task summary as a visible assistant message
+                            if (stopSummary) {
+                                finalAiResponse = stopSummary;
+                                chatHistory.push({
+                                    role: 'assistant',
+                                    content: stopSummary,
+                                    timestamp: Math.floor(Date.now() / 1000)
+                                });
+                            }
                         }
                     }
 

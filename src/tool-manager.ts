@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { z } from 'zod';
+import { loadConfig } from './config-manager.js';
 
 export interface ToolDefinition {
     name: string;
@@ -91,11 +91,6 @@ export class ToolManager {
 
         try {
             const module = await import('./tools/collaboration_tools.js');
-            this.registerTool(module.get_assigned_tasks);
-            this.registerTool(module.read_task);
-            this.registerTool(module.add_task_comment);
-            this.registerTool(module.update_task_state);
-            this.registerTool(module.create_task);
             this.registerTool(module.execute_workflow);
             this.registerTool(module.list_workflows);
         } catch (err) {
@@ -198,6 +193,8 @@ export class ToolManager {
             throw new Error(`Tool '${name}' not found. Available tools are: ${available}. Please use one of the available tools. Do NOT use file names or arbitrary actions as tool names.`);
         }
         console.log(`Executing tool: ${normalizedName}`, args, context ? `(Context: ${JSON.stringify(context)})` : '');
-        return await tool.handler({ ...args, _context: context });
+        const config = loadConfig();
+        const enrichedContext = { ...context, connections: config.connections ?? { git: [] } };
+        return await tool.handler({ ...args, _context: enrichedContext });
     }
 }

@@ -81,9 +81,7 @@ This means agents can handle genuinely complex, multi-step tasks — ones where 
 
 The loop is fully transparent in the UI: every tool call, file read, search query, and self-correction is shown in real time as it happens.
 
-![](docs/images/agent-loop.png)
-<!-- TODO: screenshot of chat showing the timeline of tool calls -->
-
+![](docs/images/how-agents-work-1.png)
 
 <a id="visual-workflow-builder"></a>
 
