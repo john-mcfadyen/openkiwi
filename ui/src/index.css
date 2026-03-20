@@ -165,7 +165,8 @@
   }
 
   .nav-button-active {
-    @apply bg-accent-primary text-white border-accent-primary;
+    @apply bg-accent-primary border-accent-primary;
+    color: var(--button-on-accent);
     /* box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); */
   }
 

@@ -64,7 +64,7 @@ export default function Sidebar({
                 navigate('/' + item.id);
             }}
             className={`w-[calc(100%-1rem)] mx-2 px-3 py-3 rounded-xl transition-all duration-50 group relative flex items-center gap-4 ${activeView === item.id
-                ? `bg-accent-primary text-white dark:text-neutral-600 shadow-lg shadow-accent-primary/20`
+                ? `bg-accent-primary text-[var(--button-on-accent)] shadow-lg shadow-accent-primary/20`
                 : 'text-primary hover:bg-neutral-200 dark:hover:bg-neutral-800'
                 }`}
             title={isNavExpanded ? undefined : item.label}
