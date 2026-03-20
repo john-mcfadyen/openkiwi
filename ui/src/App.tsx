@@ -101,7 +101,7 @@ function App() {
   // Settings: Agent Specific State
   const [settingsAgentId, setSettingsAgentId] = useState<string>('');
   const [agentsPageAgentId, setAgentsPageAgentId] = useState<string>('');
-  const [agentForm, setAgentForm] = useState<{ name: string; avatar?: string; provider?: string; heartbeat?: { enabled: boolean; schedule: string; allowManualTrigger?: boolean; }; collaboration?: { enabled: boolean; schedule: string; } }>({ name: '', provider: '', heartbeat: { enabled: false, schedule: '0 * * * *', allowManualTrigger: false }, collaboration: { enabled: false, schedule: '0 * * * *' } });
+  const [agentForm, setAgentForm] = useState<{ name: string; avatar?: string; provider?: string; heartbeat?: { enabled: boolean; schedule: string; allowManualTrigger?: boolean; } }>({ name: '', provider: '', heartbeat: { enabled: false, schedule: '0 * * * *', allowManualTrigger: false } });
   const [viewingFile, setViewingFile] = useState<{ title: string, content: string, isEditing: boolean, agentId: string } | null>(null);
 
   // Chat State
@@ -112,9 +112,6 @@ function App() {
   const [isGatewayConnected, setIsGatewayConnected] = useState(false);
   const [isProjectManagementEnabled, setIsProjectManagementEnabled] = useState(() => {
     return localStorage.getItem('experimental_projects') === 'true';
-  });
-  const [isAgentCollaborationEnabled, setIsAgentCollaborationEnabled] = useState(() => {
-    return localStorage.getItem('experimental_collaboration') === 'true';
   });
   const [isAgentActivityEnabled, setIsAgentActivityEnabled] = useState(() => {
     return localStorage.getItem('experimental_activity') === 'true';
@@ -174,6 +171,7 @@ function App() {
   const presenceWs = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const workflowStepsRef = useRef<any[]>([]);
 
 
   // Don't auto-save gateway settings on every keystroke - only save when user clicks "Connect"
@@ -231,6 +229,11 @@ function App() {
                 ...prev,
                 [msg.agentId]: msg.state
               }));
+            } else if (msg.type === 'workflow_step_progress') {
+              workflowStepsRef.current = [...workflowStepsRef.current, msg];
+              setActiveTool(prev => prev ? { ...prev, workflowProgress: msg } : prev);
+            } else if (msg.type === 'session_updated') {
+              fetchSessions();
             } else if (msg.type === 'system_error') {
               toast.error(msg.title || 'System Error', {
                 description: msg.message,
@@ -1012,6 +1015,7 @@ function App() {
         }
         setMessages(streamingMsgs);
       } else if (data.type === 'tool_call') {
+        workflowStepsRef.current = [];
         currentActiveTool = { ...data.toolCall, startedAt: Date.now() };
         setActiveTool(currentActiveTool);
         const streamingMsgs: Message[] = [...newMessages];
@@ -1024,7 +1028,8 @@ function App() {
         setMessages(streamingMsgs);
       } else if (data.type === 'tool_end') {
         if (currentActiveTool) {
-          completedTools.push({ ...currentActiveTool, durationMs: data.durationMs });
+          const steps = workflowStepsRef.current.length > 0 ? [...workflowStepsRef.current] : undefined;
+          completedTools.push({ ...currentActiveTool, durationMs: data.durationMs, workflowSteps: steps });
           currentActiveTool = null;
           setActiveTool(null);
           const streamingMsgs: Message[] = [...newMessages];
@@ -1222,7 +1227,6 @@ function App() {
               setSelectedAgentId={setAgentsPageAgentId}
               providers={config?.providers || []}
               agents={agents}
-              isAgentCollaborationEnabled={isAgentCollaborationEnabled}
               allowManualHeartbeat={config?.heartbeat?.allowManualTrigger || false}
               agentStates={agentStates}
             />
@@ -1290,8 +1294,6 @@ function App() {
               gatewayToken={gatewayToken}
               isProjectManagementEnabled={isProjectManagementEnabled}
               setIsProjectManagementEnabled={setIsProjectManagementEnabled}
-              isAgentCollaborationEnabled={isAgentCollaborationEnabled}
-              setIsAgentCollaborationEnabled={setIsAgentCollaborationEnabled}
               isAgentActivityEnabled={isAgentActivityEnabled}
               setIsAgentActivityEnabled={setIsAgentActivityEnabled}
               isProjectsEnabled={isProjectsEnabled}

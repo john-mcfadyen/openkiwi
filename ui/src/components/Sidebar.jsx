@@ -10,10 +10,10 @@ import {
     faFileLines,
     faGear,
     faArrowsSpin,
-    faDiagramProject,
     faFolder,
     faFolderOpen,
-    faPuzzlePiece
+    faScroll,
+    faBolt
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar({
@@ -39,12 +39,12 @@ export default function Sidebar({
         { experimentalProjectManagement: true },
         { id: 'projects', icon: faFolder, label: 'Projects', experimentalProjects: true },
         { id: 'files', icon: faFolderOpen, label: 'Files' },
-        { id: 'workflows', icon: faDiagramProject, label: 'Workflows', experimentalProjectManagement: true },
+        { id: 'workflows', icon: faScroll, label: 'Workflows', experimentalProjectManagement: true },
         {},
         { id: 'agents', icon: faRobot, label: 'Agents', showAlert: !hasAgents },
         { id: 'gateway', icon: faServer, label: 'Gateway', showAlert: !isGatewayConnected },
         { id: 'models', icon: faCube, label: 'Models', showAlert: !hasModels },
-        { id: 'skills', icon: faPuzzlePiece, label: 'Skills' },
+        { id: 'skills', icon: faBolt, label: 'Skills' },
     ].filter((item) => {
         if (item.experimentalProjectManagement && !isProjectManagementEnabled) return false;
         if (item.experimentalProjects && !isProjectsEnabled) return false;

@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { WebSocket } from 'ws';
 import { IncomingMessage } from 'node:http';
 import { loadConfig } from './config-manager.js';
@@ -246,6 +247,42 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                 }
             }
 
+            // Pre-activate any skill the user explicitly named in their message.
+            // This bypasses model non-determinism — if the user says "run the X skill",
+            // the skill instructions are injected directly rather than relying on the
+            // model deciding to call activate_skill.
+            if (skillDefs.length > 0) {
+                const lastUserText = (() => {
+                    const msgs = userMessages.filter((m: any) => m.role === 'user');
+                    const last = msgs[msgs.length - 1];
+                    return typeof last?.content === 'string' ? last.content : '';
+                })();
+                if (lastUserText) {
+                    for (const skillDef of skillDefs) {
+                        const escaped = skillDef.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        if (new RegExp(`\\b${escaped}\\b`, 'i').test(lastUserText)) {
+                            const content = SkillManager.getSkillContent(skillDef.name);
+                            if (content) {
+                                let instructions = content.body;
+                                if (content.scriptFiles.length > 0) {
+                                    const scriptsPath = path.join(skillDef.skillPath, 'scripts');
+                                    instructions = instructions.replace(
+                                        new RegExp(`~/.claude/skills/${skillDef.name}/scripts`, 'g'),
+                                        scriptsPath
+                                    );
+                                }
+                                payload.push({
+                                    role: 'system',
+                                    content: `## Skill Pre-activated: ${skillDef.name}\n\nThe user has explicitly requested this skill. You MUST follow these instructions now:\n\n${instructions}`
+                                });
+                                console.log(`[chat-handler] Pre-activated skill "${skillDef.name}" based on user message`);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
             logger.log({
                 type: 'request',
                 level: 'info',
@@ -396,8 +433,8 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                         if (updatedSession) {
                             updatedSession.summary = cleanSummary;
                             SessionManager.saveSession(updatedSession);
-                            // Optional: notify client via WS that summary is ready? 
-                            // For now, the next time they fetch sessions it will be there.
+                            const { broadcastMessage } = await import('./state.js');
+                            broadcastMessage({ type: 'session_updated', sessionId });
                         }
                     } catch (err) {
                         const errorMessage = err instanceof Error ? err.message : String(err);

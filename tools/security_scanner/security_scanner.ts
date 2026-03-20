@@ -118,7 +118,7 @@ const PRESETS: Record<ScannerName, ScannerPreset> = {
     gitleaks: {
         image: 'zricethezav/gitleaks',
         buildCommand: (mp, _) =>
-            `docker run --rm -v "${mp}:/src:ro" zricethezav/gitleaks detect --source /src --report-format json --no-git`,
+            `docker run --rm -v "${mp}:/src:ro" zricethezav/gitleaks detect --source /src --report-format json --report-path - --no-git`,
         parseOutput: parseGitleaks,
         allowNonZeroExit: true // exits 1 when leaks are found
     },
@@ -238,12 +238,14 @@ export default {
                         'For Semgrep: "auto" (default), "p/owasp-top-ten", "p/javascript", "p/python", "p/secrets", etc. ' +
                         'Ignored by gitleaks, bandit, and trivy.'
                 },
-                output_file: {
+                output_dir: {
                     type: 'string',
                     description:
-                        'Base filename for output (without extension). ' +
-                        'Writes {output_file}.json and {output_file}.md into the workspace root. ' +
-                        'Default: "scan-results".'
+                        'Directory (relative to workspace root) where output files will be written. ' +
+                        'The tool always writes scan-results.json and scan-results.md inside this directory. ' +
+                        'The directory is created automatically if it does not exist. ' +
+                        'Example: "security/adaptors/semgrep" → writes to workspace/security/adaptors/semgrep/scan-results.json and .md. ' +
+                        'Default: workspace root.'
                 },
                 timeout: {
                     type: 'number',
@@ -260,13 +262,27 @@ export default {
         path: string;
         scanner?: ScannerName;
         config?: string;
+        output_dir?: string;
+        /** @deprecated use output_dir instead */
         output_file?: string;
         timeout?: number;
     }) => {
         const scanner: ScannerName = args.scanner ?? 'semgrep';
         const config = args.config ?? 'auto';
-        const outputBase = args.output_file ?? 'scan-results';
         const timeoutMs = (args.timeout ?? 300) * 1000;
+
+        // Resolve output directory — support legacy output_file by treating it as output_dir if it
+        // looks like a path (contains '/') or using it as a filename base for backward compatibility.
+        let outputDir: string;
+        if (args.output_dir) {
+            outputDir = args.output_dir;
+        } else if (args.output_file) {
+            // Legacy: if output_file contains a slash we treat the last segment as the dir leaf,
+            // otherwise fall back to placing files at workspace root with that base name.
+            outputDir = args.output_file.includes('/') ? args.output_file : '';
+        } else {
+            outputDir = '';
+        }
 
         // Validate scanner name
         const preset = PRESETS[scanner];
@@ -289,10 +305,13 @@ export default {
         }
 
         // Validate output paths are inside workspace
-        const jsonOut = path.resolve(WORKSPACE_DIR, `${outputBase}.json`);
-        const mdOut = path.resolve(WORKSPACE_DIR, `${outputBase}.md`);
-        if (!jsonOut.startsWith(WORKSPACE_DIR) || !mdOut.startsWith(WORKSPACE_DIR)) {
-            return { error: 'Access denied: output_file is outside the workspace.' };
+        const outDirResolved = outputDir
+            ? path.resolve(WORKSPACE_DIR, outputDir)
+            : WORKSPACE_DIR;
+        const jsonOut = path.join(outDirResolved, 'scan-results.json');
+        const mdOut = path.join(outDirResolved, 'scan-results.md');
+        if (!outDirResolved.startsWith(WORKSPACE_DIR)) {
+            return { error: 'Access denied: output_dir is outside the workspace.' };
         }
 
         // Check Docker is available
@@ -351,7 +370,8 @@ export default {
             bySeverity[s] = (bySeverity[s] ?? 0) + 1;
         }
 
-        // Write output files
+        // Write output files (create directory first if needed)
+        fs.mkdirSync(path.dirname(jsonOut), { recursive: true });
         fs.writeFileSync(jsonOut, JSON.stringify(parsed.rawJson, null, 2), 'utf-8');
         fs.writeFileSync(mdOut, buildMarkdownReport(scanner, args.path, config, parsed), 'utf-8');
 
@@ -362,8 +382,8 @@ export default {
             config,
             totalFindings: parsed.findings.length,
             bySeverity,
-            outputJson: `${outputBase}.json`,
-            outputMarkdown: `${outputBase}.md`,
+            outputJson: jsonOut,
+            outputMarkdown: mdOut,
             // Return the top findings inline so the agent can summarise without reading the file
             topFindings: parsed.findings.slice(0, 10).map(f => ({
                 file: f.file,
