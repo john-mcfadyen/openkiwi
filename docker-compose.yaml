@@ -17,6 +17,7 @@ services:
       - ./sessions:/app/sessions
       - ./tools:/app/tools
       - ./workspace:/app/workspace
+      - ./src:/app/src
       - ./logs:/app/logs
       - ./LATEST_RELEASE.txt:/app/LATEST_RELEASE.txt
     restart: unless-stopped
