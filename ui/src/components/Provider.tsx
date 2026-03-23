@@ -67,7 +67,7 @@ export default function Provider({
                 <Column align="end">
                     <Button
                         themed={true}
-                        className="px-6 text-white whitespace-nowrap flex items-center justify-center shrink-0 mb-1"
+                        className="px-6 whitespace-nowrap flex items-center justify-center shrink-0 mb-1"
                         onClick={onScan}
                         disabled={!isEditable}
                         icon={faRefresh}>Scan</Button>
