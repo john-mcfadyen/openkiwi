@@ -9,23 +9,20 @@ const router = Router();
 router.get('/public', (req, res) => {
     const config = loadConfig();
     const safe = JSON.parse(JSON.stringify(config));
+    // Re-encrypt all sensitive fields so plaintext secrets are never sent to the UI
     if (safe.gateway?.secretToken) {
         safe.gateway.secretToken = encrypt(safe.gateway.secretToken);
+    }
+    if (safe.providers) {
+        safe.providers.forEach((p: any) => { if (p.apiKey) p.apiKey = encrypt(p.apiKey); });
     }
     if (safe.connections?.git) {
         safe.connections.git.forEach((conn: any) => { if (conn.pat) conn.pat = encrypt(conn.pat); });
     }
-    if (safe.connections?.anthropic) {
-        safe.connections.anthropic.forEach((conn: any) => { if (conn.apiKey) conn.apiKey = encrypt(conn.apiKey); });
-    }
-    if (safe.connections?.google) {
-        safe.connections.google.forEach((conn: any) => { if (conn.apiKey) conn.apiKey = encrypt(conn.apiKey); });
-    }
-    if (safe.connections?.openai) {
-        safe.connections.openai.forEach((conn: any) => { if (conn.apiKey) conn.apiKey = encrypt(conn.apiKey); });
-    }
-    if (safe.connections?.openrouter) {
-        safe.connections.openrouter.forEach((conn: any) => { if (conn.apiKey) conn.apiKey = encrypt(conn.apiKey); });
+    for (const key of ['anthropic', 'google', 'openai', 'openrouter']) {
+        if (safe.connections?.[key]) {
+            safe.connections[key].forEach((conn: any) => { if (conn.apiKey) conn.apiKey = encrypt(conn.apiKey); });
+        }
     }
     res.json(safe);
 });
