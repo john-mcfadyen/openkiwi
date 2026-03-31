@@ -44,6 +44,7 @@ export interface Agent {
     systemPrompt: string;
     provider?: string;
     isDefault?: boolean;
+    maxLoops?: number;
 }
 
 export interface AgentState {
@@ -176,6 +177,19 @@ export interface Config {
             verified?: boolean;
         }[];
     };
+}
+
+export interface ProjectAgent {
+    agentId: string;
+    role: string;
+}
+
+export interface ProjectConfig {
+    agents: ProjectAgent[];
+    roles: string[];
+    status: 'idle' | 'planning' | 'sprinting' | 'evaluating' | 'complete' | 'failed';
+    maxRevisionsPerSprint: number;
+    currentRunId: string | null;
 }
 
 export interface Workflow {

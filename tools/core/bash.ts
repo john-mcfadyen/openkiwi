@@ -1,5 +1,6 @@
 import { resolveWorkspacePath, WORKSPACE_DIR } from '../lib/workspace.js';
 import { execInWorkspace } from '../lib/exec.js';
+import { checkCommandSafety } from '../lib/command-safety.js';
 
 export default {
     definition: {
@@ -30,6 +31,14 @@ export default {
     handler: async ({ command, cwd = '', workdir = '' }: { command: string, cwd?: string, workdir?: string }) => {
         if (!command || typeof command !== 'string') {
             return { error: 'Missing required parameter: command must be a non-empty string.' };
+        }
+
+        // Safety check: block destructive commands
+        const safety = checkCommandSafety(command);
+        if (safety.blocked) {
+            return {
+                error: `BLOCKED: ${safety.reason}.${safety.suggestion ? ` Suggestion: ${safety.suggestion}` : ''}`,
+            };
         }
 
         // `workdir` is an alias for `cwd` (used by the coding-agent skill)

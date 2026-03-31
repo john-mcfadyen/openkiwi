@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { WebSocket } from 'ws';
 import { IncomingMessage } from 'node:http';
@@ -8,7 +9,7 @@ import { ToolManager } from './tool-manager.js';
 import { logger } from './logger.js';
 import { runAgentLoop } from './agent-loop.js';
 import { getChatCompletion } from './llm-provider.js';
-import { connectedClients, pendingToolCalls } from './state.js';
+import { connectedClients, pendingToolCalls, pendingApprovals } from './state.js';
 import { SkillManager } from './skill-manager.js';
 
 export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
@@ -145,8 +146,19 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                 return;
             }
 
+            // Handle Tool Approval Responses from the UI
+            if (parsed.type === 'tool_approval_response') {
+                const { id, approved } = parsed;
+                const pending = pendingApprovals.get(id);
+                if (pending) {
+                    pending.resolve(!!approved);
+                    pendingApprovals.delete(id);
+                }
+                return;
+            }
+
             // Assume it's a Chat Message if not a control type
-            const { messages: userMessages, shouldSummarize } = parsed;
+            const { messages: userMessages, shouldSummarize, mode } = parsed;
             sessionId = parsed.sessionId;
             agentId = parsed.agentId;
 
@@ -161,6 +173,27 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
             const payload: any[] = [];
             let systemPrompt = agent?.systemPrompt || currentConfig.global?.systemPrompt || "You are a helpful AI assistant.";
 
+            // Re-read MEMORY.md and SHARED_MEMORY.md fresh from disk so mid-session updates are reflected
+            if (agent?.path) {
+                const freshMemory = AgentManager.readFile(path.join(agent.path, 'MEMORY.md'));
+                const sharedMemoryPath = path.resolve(process.cwd(), 'config', 'SHARED_MEMORY.md');
+                const freshSharedMemory = fs.existsSync(sharedMemoryPath) ? fs.readFileSync(sharedMemoryPath, 'utf-8') : undefined;
+
+                // Replace the cached memory sections with fresh content
+                systemPrompt = systemPrompt.replace(
+                    /## Your Memory\n[\s\S]*?(?=\n## (?!Your Memory)|Whenever the user shares)/,
+                    freshMemory
+                        ? `## Your Memory\nThe following is your long-term memory. Use this to recall facts about the user and past interactions without needing to search.\n\n${freshMemory}\n\n`
+                        : ''
+                );
+                systemPrompt = systemPrompt.replace(
+                    /## Shared Memory \(all agents\)\n[\s\S]*?(?=\n## (?!Shared Memory)|Whenever the user shares)/,
+                    freshSharedMemory
+                        ? `## Shared Memory (all agents)\nThe following memory is shared across all agents.\n\n${freshSharedMemory}\n\n`
+                        : ''
+                );
+            }
+
             // Inject available skills into system prompt
             const skillDefs = SkillManager.getSkillDefinitions();
             if (skillDefs.length > 0) {
@@ -170,6 +203,33 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
 
             // Anti-hallucination directive
             systemPrompt += "\n\nCRITICAL: Always use the provided tools to take actions — never claim to have done something without calling the corresponding tool and receiving a successful response. Use exact tool names; do not invent tool names or use filenames as tool names.";
+
+            // Multi-agent delegation hint (Option 1 escape hatch)
+            const agentIds = AgentManager.listAgents();
+            if (agentIds.length > 1) {
+                systemPrompt += `\n\n## Multi-Agent Delegation\nYou can delegate tasks to other agents using the \`delegate_to_agent\` tool. Available agents: ${agentIds.join(', ')}. ` +
+                    `For parallel work, call delegate_to_agent multiple times with \`wait: false\` and the same \`run_id\`, then call \`wait_for_agents\` to collect results. ` +
+                    `Use the \`scratchpad_write\` and \`scratchpad_read\` tools to share data between agents. ` +
+                    `Only delegate when the task genuinely benefits from multiple agents working in parallel — for simple tasks, just handle it yourself.`;
+            }
+
+            // Code mode: append coding-focused system prompt supplement
+            if (mode === 'code') {
+                systemPrompt += `\n\n## Code Mode
+You are operating in CODE MODE — a terminal-like coding environment optimized for software engineering.
+
+Key behaviors:
+- Use tools proactively to explore, read, edit, and test code
+- Show your work: explain what you're doing before and after tool calls
+- When editing files, always read them first to understand context
+- After making changes, verify them (run tests, re-read the file, etc.)
+- Use bash for git operations, running tests, installing packages, etc.
+- Be concise in explanations but thorough in code changes
+- The workspace directory is your project root
+- Available tools are your primary interface — use them liberally
+- When asked to implement something, write the actual code using write/edit tools
+- Break complex tasks into steps and execute them methodically`;
+            }
 
             if (systemPrompt) {
                 const now = new Date();
@@ -210,7 +270,8 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                 modelId: providerConfig.model,
                 apiKey: providerConfig.apiKey,
                 maxTokens: providerConfig.maxTokens,
-                supportsTools: !!providerConfig?.capabilities?.trained_for_tool_use
+                supportsTools: !!providerConfig?.capabilities?.trained_for_tool_use,
+                maxContextLength: (providerConfig as any).max_context_length as number | undefined
             };
 
             if (currentConfig.chat.includeHistory) {
@@ -295,7 +356,7 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
             let fullContent = '';
 
             AgentManager.setAgentState(effectiveAgentId, 'working', 'Processing user prompt');
-            let finalAiResponse, lastTps, totalUsage, chatHistory;
+            let finalAiResponse, lastTps, lastPromptTokens, totalUsage, chatHistory;
             let yieldStateMsg: any = null;
             currentAbortController = new AbortController();
             try {
@@ -305,7 +366,7 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                     llmConfig,
                     messages: payload,
                     visionEnabled: !!providerConfig?.capabilities?.vision,
-                    maxLoops: 5,
+                    maxLoops: agent?.maxLoops || 100,
                     signToolUrls: true,
                     abortSignal: currentAbortController.signal,
                     onDelta: (content: string) => {
@@ -319,13 +380,42 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                     onToolCall: (toolCall: any) => {
                         ws.send(JSON.stringify({ type: 'tool_call', toolCall }));
                     },
-                    onToolEnd: (toolCallId: string, name: string, durationMs: number, success: boolean) => {
-                        ws.send(JSON.stringify({ type: 'tool_end', toolCallId, name, durationMs, success }));
+                    onToolEnd: (toolCallId: string, name: string, durationMs: number, success: boolean, result?: any) => {
+                        let resultPayload = result;
+                        if (result) {
+                            const serialized = typeof result === 'string' ? result : JSON.stringify(result);
+                            if (serialized.length > 50_000) {
+                                resultPayload = { _truncated: true, preview: serialized.slice(0, 50_000) + '...' };
+                            }
+                        }
+                        ws.send(JSON.stringify({ type: 'tool_end', toolCallId, name, durationMs, success, result: resultPayload }));
+                    },
+                    onCompact: () => {
+                        ws.send(JSON.stringify({ type: 'compacting' }));
+                    },
+                    onToolApprovalRequest: (toolCallId: string, toolName: string, toolArgs: any) => {
+                        return new Promise<boolean>((resolve) => {
+                            pendingApprovals.set(toolCallId, { resolve });
+                            ws.send(JSON.stringify({
+                                type: 'tool_approval_request',
+                                id: toolCallId,
+                                name: toolName,
+                                args: toolArgs,
+                            }));
+                            // Auto-deny after 60 seconds if no response
+                            setTimeout(() => {
+                                if (pendingApprovals.has(toolCallId)) {
+                                    pendingApprovals.delete(toolCallId);
+                                    resolve(false);
+                                }
+                            }, 60_000);
+                        });
                     }
                 });
 
                 finalAiResponse = result.finalResponse;
                 lastTps = result.lastTps;
+                lastPromptTokens = result.lastPromptTokens;
                 totalUsage = result.usage;
                 chatHistory = result.chatHistory;
                 if (result.yieldState) {
@@ -373,9 +463,9 @@ export function handleChatConnection(ws: WebSocket, req: IncomingMessage) {
                         stats: {
                             tps: lastTps,
                             tokens: totalUsage.completion_tokens,
-                            inputTokens: totalUsage.prompt_tokens,
+                            inputTokens: lastPromptTokens || totalUsage.prompt_tokens,
                             outputTokens: totalUsage.completion_tokens,
-                            totalTokens: totalUsage.total_tokens
+                            totalTokens: (lastPromptTokens || totalUsage.prompt_tokens) + totalUsage.completion_tokens
                         }
                     };
                 }

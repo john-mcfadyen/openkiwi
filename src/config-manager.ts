@@ -92,6 +92,10 @@ const ConfigSchema = z.object({
     }).passthrough().default({ allowManualTrigger: false }),
     enabledTools: z.record(z.string(), z.boolean()).default({}),
     tools: z.record(z.string(), z.any()).default({}),
+    mcpServers: z.record(z.string(), z.object({
+        command: z.string(),
+        args: z.array(z.string()).default([]),
+    }).passthrough()).default({}),
     connections: z.object({
         git: z.array(z.object({
             id: z.string(),
@@ -314,6 +318,7 @@ export function loadConfig(): Config {
             },
             enabledTools: {},
             tools: {},
+            mcpServers: {},
             connections: { git: [], anthropic: [], lmstudio: [], lemonade: [], google: [], openai: [], ollama: [], openrouter: [] },
         };
     }

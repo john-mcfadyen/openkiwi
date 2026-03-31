@@ -184,43 +184,29 @@ export default function ModelsPage({
     };
 
     const detectCapabilities = (model: Model) => {
+        // If the backend already detected capabilities (e.g. via Ollama /api/show),
+        // trust those results and only use heuristics to fill in gaps.
+        const backendCaps = model.capabilities || {};
+
         const modelId = (model.id || "").toLowerCase();
         const displayName = (model.displayName || model.display_name || "").toLowerCase();
         const description = (model.description || "").toLowerCase();
+        const fields = [modelId, displayName, description];
+        const any = (patterns: string[]) => fields.some(f => patterns.some(p => f.includes(p)));
 
-        const isReasoning = model.capabilities?.reasoning ||
+        const isReasoning = backendCaps.reasoning ||
             model.thinking === true ||
-            modelId.includes("deepseek-r1") ||
-            modelId.includes("o1") ||
-            modelId.includes("reasoning") ||
-            modelId.includes("thinking") ||
-            modelId.includes("claude-3-7") ||
-            displayName.includes("deepseek-r1") ||
-            displayName.includes("o1") ||
-            displayName.includes("reasoning") ||
-            displayName.includes("thinking") ||
-            displayName.includes("claude-3.7");
+            any(["deepseek-r1", "o1-", "o1", "o3-", "o3", "reasoning", "thinking", "claude-3-7", "claude-3.7", "qwq", "r1-"]);
 
-        const isVision = model.capabilities?.vision ||
-            modelId.includes("vision") ||
-            modelId.includes("flash") ||
-            modelId.includes("pro") ||
-            modelId.includes("claude-3") ||
-            displayName.includes("vision") ||
-            displayName.includes("flash") ||
-            displayName.includes("pro") ||
-            displayName.includes("claude-3");
+        const isVision = backendCaps.vision ||
+            any(["vision", "flash", "pro", "claude-3", "claude-4", "gpt-4o", "gpt-4-turbo",
+                 "llava", "moondream", "bakllava", "minicpm-v", "cogvlm"]);
 
-        const isTool = model.capabilities?.trained_for_tool_use ||
-            modelId.includes("tool") ||
-            modelId.includes("flash") ||
-            modelId.includes("pro") ||
-            modelId.includes("claude-3") ||
-            displayName.includes("tool") ||
-            displayName.includes("flash") ||
-            displayName.includes("pro") ||
-            description.includes("tool") ||
-            description.includes("claude-3");
+        const isTool = backendCaps.trained_for_tool_use ||
+            any(["flash", "pro", "claude-3", "claude-4", "gpt-4", "gpt-3.5-turbo",
+                 "mistral", "mixtral", "command-r", "gemma", "llama-3", "llama3",
+                 "qwen", "phi-3", "phi-4", "hermes", "functionary", "firefunction",
+                 "nexusraven", "gorilla"]);
 
         return {
             reasoning: isReasoning || false,

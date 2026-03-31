@@ -17,6 +17,8 @@ import WorkflowsPage from './components/pages/WorkflowsPage'
 import ProjectsPage from './components/pages/ProjectsPage'
 import WorkspacePage from './components/pages/WorkspacePage'
 import SkillsPage from './components/pages/SettingsPage/Settings_Skills'
+import MCPServersPage from './components/pages/MCPServersPage'
+import CodePage from './components/pages/CodePage'
 import Sidebar from './components/Sidebar'
 import {
   faPlus,
@@ -108,7 +110,7 @@ function App() {
   // Settings: Agent Specific State
   const [settingsAgentId, setSettingsAgentId] = useState<string>('');
   const [agentsPageAgentId, setAgentsPageAgentId] = useState<string>('');
-  const [agentForm, setAgentForm] = useState<{ name: string; avatar?: string; provider?: string; heartbeat?: { enabled: boolean; schedule: string; allowManualTrigger?: boolean; } }>({ name: '', provider: '', heartbeat: { enabled: false, schedule: '0 * * * *', allowManualTrigger: false } });
+  const [agentForm, setAgentForm] = useState<{ name: string; avatar?: string; provider?: string; heartbeat?: { enabled: boolean; schedule: string; allowManualTrigger?: boolean; }; maxLoops?: number }>({ name: '', provider: '', heartbeat: { enabled: false, schedule: '0 * * * *', allowManualTrigger: false } });
   const [viewingFile, setViewingFile] = useState<{ title: string, content: string, isEditing: boolean, agentId: string } | null>(null);
 
   // Chat State
@@ -125,6 +127,9 @@ function App() {
   });
   const [isProjectsEnabled, setIsProjectsEnabled] = useState(() => {
     return localStorage.getItem('experimental_project_management') === 'true';
+  });
+  const [isCodeEnabled, setIsCodeEnabled] = useState(() => {
+    return localStorage.getItem('experimental_code') !== 'false';
   });
 
   useEffect(() => {
@@ -1224,6 +1229,7 @@ function App() {
           isProjectManagementEnabled={isProjectManagementEnabled}
           isProjectsEnabled={isProjectsEnabled}
           isAgentActivityEnabled={isAgentActivityEnabled}
+          isCodeEnabled={isCodeEnabled}
         />
 
         {/* Secondary Sidebar (Chat Sessions) */}
@@ -1311,6 +1317,16 @@ function App() {
               formatTimestamp={formatTimestamp}
               contextWarning={contextWarning}
             />
+          ) : activeView === 'code' ? (
+            <CodePage
+              gatewayAddr={gatewayAddr}
+              gatewayToken={gatewayToken}
+              agents={agents}
+              config={config}
+              isGatewayConnected={isGatewayConnected}
+              getApiUrl={getApiUrl}
+              getWsUrl={getWsUrl}
+            />
           ) : activeView === 'logs' ? (
             <LogsPage logs={logs} onClear={handleClearLogs} />
           ) : activeView === 'agents' ? (
@@ -1354,10 +1370,17 @@ function App() {
               config={config}
               saveConfig={saveConfig}
             />
+          ) : activeView === 'mcp' ? (
+            <MCPServersPage
+              config={config}
+              saveConfig={saveConfig}
+              gatewayAddr={gatewayAddr}
+              gatewayToken={gatewayToken}
+            />
           ) : activeView === 'activity' ? (
             <ActivityPage agents={agents} agentStates={agentStates} />
           ) : activeView === 'projects' ? (
-            <ProjectsPage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
+            <ProjectsPage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} agents={agents} />
           ) : activeView === 'files' ? (
             <WorkspacePage gatewayAddr={gatewayAddr} gatewayToken={gatewayToken} />
           ) : activeView === 'skills' ? (
@@ -1397,6 +1420,8 @@ function App() {
               setIsAgentActivityEnabled={setIsAgentActivityEnabled}
               isProjectsEnabled={isProjectsEnabled}
               setIsProjectsEnabled={setIsProjectsEnabled}
+              isCodeEnabled={isCodeEnabled}
+              setIsCodeEnabled={setIsCodeEnabled}
             />
           )}
         </main>
