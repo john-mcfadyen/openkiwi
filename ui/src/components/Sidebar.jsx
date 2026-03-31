@@ -40,7 +40,7 @@ export default function Sidebar({
         { id: 'chat', icon: faComments, label: 'Chat' },
         { id: 'code', icon: faTerminal, label: 'Code', experimentalCode: true },
         { id: 'activity', icon: faArrowsSpin, label: 'Activity', showActive: hasActiveAgents, experimentalActivity: true },
-        { experimentalProjectManagement: true },
+        {},
         { id: 'projects', icon: faFolder, label: 'Projects', experimentalProjects: true },
         { id: 'files', icon: faFolderOpen, label: 'Files' },
         { id: 'workflows', icon: faScroll, label: 'Workflows' },
@@ -51,7 +51,6 @@ export default function Sidebar({
         { id: 'models', icon: faCube, label: 'Models', showAlert: !hasModels },
         { id: 'skills', icon: faBolt, label: 'Skills' },
     ].filter((item) => {
-        if (item.experimentalProjectManagement && !isProjectManagementEnabled) return false;
         if (item.experimentalProjects && !isProjectsEnabled) return false;
         if (item.experimentalActivity && !isAgentActivityEnabled) return false;
         if (item.experimentalCode && !isCodeEnabled) return false;
