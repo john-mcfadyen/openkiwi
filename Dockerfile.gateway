@@ -32,9 +32,17 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     apt-get install -y gh --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Docker CLI for Docker-out-of-Docker (security scanners launch sibling containers)
+RUN ARCH=$(uname -m) && \
+    curl -fsSL "https://download.docker.com/linux/static/stable/${ARCH}/docker-27.5.1.tgz" | \
+    tar xz --strip-components=1 -C /usr/local/bin docker/docker
+
 # Tell Puppeteer to skip installing Chrome. We'll use the installed package.
+ARG APP_VERSION=dev
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    APP_VERSION=$APP_VERSION
+LABEL org.opencontainers.image.version=$APP_VERSION
 
 COPY package*.json ./
 # Remove the postinstall script (which tries to install ui/) before installing,

@@ -158,6 +158,14 @@ async function executeStep(
     ];
 
     const callResults: any[] = [];
+    // When the tool defines resultKey(), we deduplicate results by key so that
+    // retries of the same operation replace earlier failures instead of inflating
+    // the result count, and verification/housekeeping calls (key === null) are
+    // excluded entirely.
+    const resultKeyFn = typeof (toolDef as any).resultKey === 'function'
+        ? (toolDef as any).resultKey as (args: any) => string | null
+        : null;
+    const resultKeyIndex = new Map<string, number>();
 
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
         let collected: { toolCalls: any[]; textContent: string };
@@ -200,8 +208,28 @@ async function executeStep(
                 result = { error: e.message };
             }
 
-            // Only track results from the primary tool — glob calls are housekeeping
-            if (calledTool === toolId) callResults.push(result);
+            // Only track results from the primary tool — glob/ls calls are housekeeping.
+            // When resultKey is available, deduplicate by key (retries replace earlier
+            // failures) and skip verification calls (key === null).
+            if (calledTool === toolId) {
+                if (resultKeyFn) {
+                    let key: string | null;
+                    try { key = resultKeyFn(args); } catch { key = undefined as any; }
+                    if (key === null || key === undefined) {
+                        // Verification / informational call — don't track
+                    } else {
+                        const existing = resultKeyIndex.get(key);
+                        if (existing !== undefined) {
+                            callResults[existing] = result;
+                        } else {
+                            resultKeyIndex.set(key, callResults.length);
+                            callResults.push(result);
+                        }
+                    }
+                } else {
+                    callResults.push(result);
+                }
+            }
 
             // Trim result before adding to history to prevent context bloat
             messages.push({
