@@ -17,6 +17,18 @@ import SegmentedControl from '../../SegmentedControl'
 import Input from '../../Input'
 import Button from '../../Button'
 
+// crypto.randomUUID() requires a secure context (HTTPS or localhost).
+// Fall back to a simple UUID generator for plain-HTTP deployments.
+const uuid = (): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        try { return crypto.randomUUID() } catch { /* non-secure context */ }
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = (Math.random() * 16) | 0
+        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+    })
+}
+
 // ── Logos ──────────────────────────────────────────────────────────────────────
 
 const GoogleLogo = () => (
@@ -330,7 +342,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
                 return
             }
             const newConn: AnthropicConn = {
-                id: crypto.randomUUID(),
+                id: uuid(),
                 label: anthropicLabel.trim() || 'Anthropic',
                 apiKey: anthropicKey,
                 verified: true,
@@ -371,7 +383,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
             return
         }
         const newConn: LMStudioConn = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             label: lmstudioLabel.trim() || 'LM Studio',
             endpoint: lmstudioEndpoint.trim(),
         }
@@ -406,7 +418,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
             return
         }
         const newConn: LemonadeConn = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             label: lemonadeLabel.trim() || 'Lemonade',
             endpoint: lemonadeEndpoint.trim(),
         }
@@ -451,7 +463,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
                 return
             }
             const newConn: GoogleAPIConn = {
-                id: crypto.randomUUID(),
+                id: uuid(),
                 label: googleAPILabel.trim() || 'Google Gemini',
                 apiKey: googleAPIKey,
                 verified: true,
@@ -502,7 +514,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
                 return
             }
             const newConn: OpenAIConn = {
-                id: crypto.randomUUID(),
+                id: uuid(),
                 label: openAILabel.trim() || 'OpenAI',
                 apiKey: openAIKey,
                 verified: true,
@@ -543,7 +555,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
             return
         }
         const newConn: OllamaConn = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             label: ollamaLabel.trim() || 'Ollama',
             endpoint: ollamaEndpoint.trim(),
         }
@@ -588,7 +600,7 @@ export default function Settings_Connections({ gatewayAddr, gatewayToken, config
                 return
             }
             const newConn: OpenRouterConn = {
-                id: crypto.randomUUID(),
+                id: uuid(),
                 label: openRouterLabel.trim() || 'OpenRouter',
                 apiKey: openRouterKey,
                 verified: true,

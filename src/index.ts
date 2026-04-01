@@ -99,6 +99,11 @@ async function startServer() {
     const PORT = config.gateway.port;
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`Gateway service is hot and running on port ${PORT}`);
+        const message = `Gateway Token: ${config.gateway.secretToken}`;
+        const line = '-'.repeat(message.length);
+        console.log('\n' + line);
+        console.log(message);
+        console.log(line + '\n');
     });
 }
 
