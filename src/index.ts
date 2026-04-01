@@ -51,8 +51,10 @@ const wss = new WebSocketServer({
 
         const currentConfig = loadConfig();
         const allowed = currentConfig.gateway.allowedOrigins || [];
+        const envOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [];
+        const allAllowed = [...allowed, ...envOrigins];
 
-        if (allowed.includes('*') || allowed.includes(origin)) {
+        if (allAllowed.includes('*') || allAllowed.includes(origin)) {
             callback(true);
         } else {
             console.warn(`[WebSocket] Blocked connection from unauthorized origin: ${origin}`);

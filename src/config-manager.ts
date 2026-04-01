@@ -83,10 +83,9 @@ const ConfigSchema = z.object({
         embeddingsModel: z.string().default(""),
     }).passthrough().default({ useEmbeddings: false, embeddingsModel: "" }),
     system: z.object({
-        version: z.string().default("2026-02-18"),
         latestVersion: z.string().default(""),
         updateCheckInterval: z.number().default(3600000),
-    }).passthrough().default({ version: "2026-02-18", latestVersion: "", updateCheckInterval: 3600000 }),
+    }).passthrough().default({ latestVersion: "", updateCheckInterval: 3600000 }),
     heartbeat: z.object({
         allowManualTrigger: z.boolean().default(false),
     }).passthrough().default({ allowManualTrigger: false }),
@@ -304,7 +303,6 @@ export function loadConfig(): Config {
                 embeddingsModel: "",
             },
             system: {
-                version: "2026-02-18",
                 latestVersion: "",
                 updateCheckInterval: 3600000,
             },

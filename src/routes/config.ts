@@ -3,11 +3,13 @@ import { loadConfig, saveConfig, Config, encrypt } from '../config-manager.js';
 import { AgentManager } from '../agent-manager.js';
 import { ToolManager } from '../tool-manager.js';
 import { connectedClients } from '../state.js';
+import { getAppVersion } from '../services/update-service.js';
 
 const router = Router();
 
 router.get('/public', (req, res) => {
     const config = loadConfig();
+    config.system = { ...config.system, version: getAppVersion() };
     const safe = JSON.parse(JSON.stringify(config));
     // Re-encrypt all sensitive fields so plaintext secrets are never sent to the UI
     if (safe.gateway?.secretToken) {
@@ -28,7 +30,10 @@ router.get('/public', (req, res) => {
 });
 
 router.get('/', (req, res) => {
-    res.json(loadConfig());
+    const config = loadConfig();
+    // Inject build-time version so the UI can display it
+    config.system = { ...config.system, version: getAppVersion() };
+    res.json(config);
 });
 
 router.post('/', async (req, res) => {
