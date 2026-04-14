@@ -182,6 +182,17 @@ export default {
                         return { error: 'text is required for create_post.' };
                     }
 
+                    // Platform-specific character limits. LinkedIn is the strictest
+                    // (3000 chars) and Buffer's API rejects overlong posts with an
+                    // unhelpful "UnexpectedError: Unknown error". Catching it here
+                    // gives the caller a clear, actionable error before the round trip.
+                    const LINKEDIN_MAX_CHARS = 3000;
+                    if (args.text.length > LINKEDIN_MAX_CHARS) {
+                        return {
+                            error: `Text is ${args.text.length} characters, which exceeds LinkedIn's ${LINKEDIN_MAX_CHARS}-character limit. Shorten the post and try again. (If publishing only to non-LinkedIn channels with higher limits, this check is conservative — open an issue if you hit a false positive.)`
+                        };
+                    }
+
                     const mode = args.mode || 'addToQueue';
 
                     if (mode === 'customScheduled' && !args.dueAt) {
