@@ -4,6 +4,7 @@ export interface Message {
     content: string;
     timestamp?: number;
     isError?: boolean;
+    isWarning?: boolean;
     isEphemeral?: boolean;
     name?: string; // used for tool
     tool_calls?: {
@@ -43,6 +44,7 @@ export interface Agent {
     systemPrompt: string;
     provider?: string;
     isDefault?: boolean;
+    maxLoops?: number;
 }
 
 export interface AgentState {
@@ -112,6 +114,7 @@ export interface Config {
             reasoning?: boolean;
             trained_for_tool_use?: boolean;
         };
+        max_context_length?: number;
     }[];
     memory?: {
         useEmbeddings: boolean;
@@ -134,7 +137,59 @@ export interface Config {
             verified?: boolean;
             verifiedUsername?: string;
         }[];
+        anthropic?: {
+            id: string;
+            label: string;
+            apiKey: string;
+            verified?: boolean;
+        }[];
+        lmstudio?: {
+            id: string;
+            label: string;
+            endpoint: string;
+        }[];
+        lemonade?: {
+            id: string;
+            label: string;
+            endpoint: string;
+        }[];
+        google?: {
+            id: string;
+            label: string;
+            apiKey: string;
+            verified?: boolean;
+        }[];
+        openai?: {
+            id: string;
+            label: string;
+            apiKey: string;
+            verified?: boolean;
+        }[];
+        ollama?: {
+            id: string;
+            label: string;
+            endpoint: string;
+        }[];
+        openrouter?: {
+            id: string;
+            label: string;
+            apiKey: string;
+            verified?: boolean;
+        }[];
     };
+}
+
+export interface ProjectAgent {
+    agentId: string;
+    role: string;
+}
+
+export interface ProjectConfig {
+    agents: ProjectAgent[];
+    roles: string[];
+    status: 'idle' | 'planning' | 'sprinting' | 'evaluating' | 'complete' | 'failed';
+    maxRevisionsPerSprint: number;
+    currentRunId: string | null;
 }
 
 export interface Workflow {
